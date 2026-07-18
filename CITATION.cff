@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Quoin: a macOS text editor where AI agents are first-class users"
+type: software
+authors:
+  - family-names: Motaghi
+    given-names: Reza
+    orcid: "https://orcid.org/0009-0005-3194-1879"
+    website: "https://rezamotaghi.com"
+repository-code: "https://github.com/rezamotaghi/quoin"
+version: 1.0.0
+license: MIT
+keywords:
+  - text editor
+  - macOS
+  - Model Context Protocol
+  - MCP
+  - AI agents
+  - agent-native instruments
+  - human-in-the-loop
