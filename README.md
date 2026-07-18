@@ -6,6 +6,15 @@
 
 [![CI](https://github.com/rezamotaghi/quoin/actions/workflows/ci.yml/badge.svg)](https://github.com/rezamotaghi/quoin/actions/workflows/ci.yml)
 
+![Quoin demo: an agent applies three buffer edits over MCP, then undo peels them off one at a time](Assets/demo.gif)
+
+*Above: a real session, captured live. An agent connected over MCP applies
+three edits to the open buffer (a grammar fix, a typo, a missing section);
+each lands selected and unsaved. Then plain undo, the same step Cmd+Z
+triggers, peels the agent's edits off one at a time until the original text
+is back and the buffer is clean. One agent edit, one undo step; disk is
+never touched until you save.*
+
 A quoin (pronounced "coin") is the letterpress wedge that locks loose type
 into the frame so it can print. That is this editor's job in the agent era:
 hold the text steady while agents work on it; nothing is committed until you
