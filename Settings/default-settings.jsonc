@@ -1,0 +1,73 @@
+// Default settings for Quoin. Sublime-style: this file ships with the
+// app; user overrides live in ~/Library/Application Support/Quoin/settings.jsonc
+// and win key-by-key. Both files are JSONC (JSON with // comments and
+// trailing commas), watched for changes and hot-applied while the app runs.
+//
+// Key names deliberately mirror Sublime's Preferences.sublime-settings so
+// Reza's muscle memory (and his existing user prefs file) map 1:1.
+// The [Phase N] tag says when a key becomes functional; unknown keys are
+// ignored, never an error.
+{
+	// ── Appearance ────────────────────────────────────────────────
+	"theme": "auto",                     // "auto" follows the OS appearance | "dark" | "light"
+	"dark_color_scheme": "mariana",      // scheme files live in Settings/schemes/
+	"light_color_scheme": "breakers",
+	// Reza's real Sublime rendering (read from his Mac 2026-07-09: Menlo
+	// comes from Sublime's Mac platform file, 18 from his user overrides).
+	"font_face": "Menlo",                // "" = system monospace (SF Mono)  [Phase 1]
+	"font_size": 18,                     // [Phase 1]
+
+	// ── Editing ───────────────────────────────────────────────────
+	"tab_size": 4,                       // [Phase 1]
+	"translate_tabs_to_spaces": false,   // [Phase 1]
+	"detect_indentation": true,          // sniff tabs-vs-spaces on open  [Phase 2]
+	"auto_indent": true,                 // [not yet built; the syntax tree exists now, wiring is its own session]
+	"word_wrap": "auto",                 // "auto" = off for source code, on otherwise  [Phase 1: true/false only]
+	"auto_match_enabled": true,          // auto-pair brackets/quotes  [not yet built]
+	"match_brackets": true,              // highlight the pair around the caret  [not yet built]
+	"copy_with_empty_selection": true,   // Cmd+C with no selection copies the line  [Phase 2]
+
+	// ── Saving ────────────────────────────────────────────────────
+	"trim_trailing_white_space_on_save": "none",  // "none" | "all"  [Phase 2]
+	"ensure_newline_at_eof_on_save": false,       // [Phase 2]
+	"default_encoding": "UTF-8",
+	"fallback_encoding": "windows-1252",          // when detection fails on open
+
+	// ── Gutter & caret ────────────────────────────────────────────
+	"line_numbers": true,                // [Phase 1]
+	"highlight_line": false,             // [Phase 2]
+	"highlight_line_number": true,       // [Phase 2]
+	"caret_style": "solid",              // "solid" | "blink"  [stretch: rented view has no public blink switch yet]
+	"draw_indent_guides": true,          // [not yet built]
+	"draw_white_space": ["selection"],   // faint dot per space / bar per tab; "selection" (Sublime default) or "all" honored
+
+	// ── Behavior ──────────────────────────────────────────────────
+	"hot_exit": true,                    // restore unsaved buffers on relaunch (NSDocument autosave)  [Phase 2]
+	"open_tabs_after_current": true,     // [Phase 2]
+	"reload_file_on_change": true,       // [Phase 2]
+	"scroll_past_end": false,            // Sublime's MAC platform default (the pasted defaults file says true, macOS overrides it)  [stretch: rented view has no overscroll API yet]
+
+	// ── Agent surface (Amendment 1) ───────────────────────────────
+	// The editor is a first-class surface for AI agents: they read/act
+	// through the SAME seams as the UI (documents, commands, selections).
+	"agent_server": true,                // local unix socket (~/Library/Application Support/Quoin/agent.sock)
+	                                     // + the QuoinMCP stdio shim inside the .app; file-permission
+	                                     // protected, this machine only, no network listener
+	"follow_agent_edits": false,         // front a tab when an external edit reloads it (agent "follow" mode)
+
+	// ── Cmd+P & indexing ──────────────────────────────────────────  [Phase 4]
+	// Sublime's stock lists (Reza's baseline), plus dev-tool dirs Sublime
+	// doesn't need to know about (node_modules, .build, DerivedData, .venv*).
+	"folder_exclude_patterns": [".svn", ".git", ".hg", "CVS", ".Trash", ".Trash-*", "node_modules", ".build", ".venv*", "DerivedData"],
+	"file_exclude_patterns": ["*.pyc", "*.pyo", "*.exe", "*.dll", "*.obj", "*.o", "*.a", "*.lib", "*.so", "*.dylib", "*.ncb", "*.sdf", "*.suo", "*.pdb", "*.idb", ".DS_Store", ".directory", "desktop.ini", "*.class", "*.psd", "*.db", "*.sublime-workspace"],
+	"binary_file_patterns": ["*.jpg", "*.jpeg", "*.png", "*.gif", "*.ttf", "*.tga", "*.dds", "*.ico", "*.eot", "*.pdf", "*.swf", "*.jar", "*.zip", "*.webp", "*.otf"],
+
+	// ── Parked Sublime features (documented so intent isn't lost; unknown
+	//    keys are ignored by design) ─────────────────────────────────
+	// "highlight_gutter": true,          // [Phase 3, with schemes]
+	// "match_selection": true,           // highlight other occurrences of selection [Phase 3+]
+	// "mini_diff": true,                 // modified-lines gutter marks [needs git awareness, post-Phase 6]
+	// "fold_buttons" / "fold_style"      // code folding [post-Phase 6]
+	// "default_line_ending": "system",   // CRLF/LF choice on new files [with encodings pass]
+	// minimap                            // [stretch, custom drawing, see ARCHITECTURE.md risks]
+}

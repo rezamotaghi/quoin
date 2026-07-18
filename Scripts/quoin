@@ -1,0 +1,17 @@
+#!/bin/bash
+# quoin: open files in Quoin from a terminal (agents use this too).
+# Usage: quoin file[:line] [file[:line] ...]      e.g.  quoin src/main.swift:42
+# Install: ln -s "$(pwd)/Scripts/quoin" /usr/local/bin/quoin   (from the repo root)
+set -euo pipefail
+for arg in "$@"; do
+  file="$arg"; line=""
+  if [[ "$arg" == *:* && "${arg##*:}" =~ ^[0-9]+$ ]]; then
+    line="${arg##*:}"; file="${arg%:*}"
+  fi
+  dir="$(cd "$(dirname "$file")" && pwd)"
+  abs="$dir/$(basename "$file")"
+  encoded=$(printf %s "$abs" | python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.stdin.read()))')
+  url="quoin://open?file=$encoded"
+  [[ -n "$line" ]] && url="$url&line=$line"
+  open "$url"
+done

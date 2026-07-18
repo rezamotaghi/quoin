@@ -1,0 +1,56 @@
+// Breakers-leaning light scheme: the same token roles as Mariana, in the
+// light palette this app has used since Phase 1. Not a byte-exact Sublime
+// Breakers transcription; tune values freely.
+{
+	"name": "Breakers",
+
+	"globals": {
+		"background": "#FBFBFC",
+		"foreground": "#3D4247",
+		"caret": "#E27E3A",
+		"line_highlight": "#EEF1F4",
+		"selection": "#D6E3F2",
+		"gutter_foreground": "#9AA0A6",
+	},
+
+	"rules": {
+		// ── Code (tree-sitter capture names) ─────────────────────────
+		"comment": "#8A939C",
+		"string": "#3F8E44",
+		"string.special.key": "#0B7C7C",   // JSON object keys
+		"string.escape": "#0B7C7C",
+		"escape": "#0B7C7C",
+		"number": "#C25205",
+		"boolean": "#C22F3B",
+		"constant": "#C22F3B",
+		"keyword": "#8E4D9E",
+		"keyword.operator": "#0B7C7C",
+		"operator": "#0B7C7C",
+		"function": "#1D5FA9",
+		"function.macro": "#B4531F",
+		"constructor": "#A96B00",
+		"type": "#A96B00",
+		"attribute": "#8E4D9E",
+		"label": "#C22F3B",
+		"variable.builtin": "#C22F3B",     // self, cls
+		"punctuation.special": "#C25205",  // markdown #'s, string interpolation
+
+		// ── Markdown (block + inline grammar names) ──────────────────
+		"text.title": "#1D5FA9",
+		"text.strong": "#A96B00",
+		"text.emphasis": "#8E4D9E",
+		"text.literal": "#0B7C7C",         // inline code + fences
+		"text.uri": "#1D5FA9",
+		"text.reference": "#1D5FA9",
+
+		// ── TokenLexer names (JSONC files still use it) ──────────────
+		"key": "#0B7C7C",
+		"heading": "#1D5FA9",
+		"strong": "#A96B00",
+		"emphasis": "#8E4D9E",
+		"code": "#0B7C7C",
+		"link": "#1D5FA9",
+		"quote": "#8A939C",
+		"bullet": "#C25205",
+	},
+}

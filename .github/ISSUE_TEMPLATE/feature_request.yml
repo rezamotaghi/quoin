@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose a change. Start with the problem, not the solution.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Quoin is deliberately small. The strongest requests name a real
+        problem first; the solution can be argued about afterwards. Read
+        ARCHITECTURE.md before proposing anything that touches the frozen
+        decisions or the nine quoin_* MCP verbs.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that Quoin makes hard or impossible today? Describe the situation, not the feature.
+      placeholder: "When I ... I have to ... because Quoin ..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution (optional)
+      description: If you have a specific design in mind, sketch it here. It is fine to leave this empty.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you tried
+      description: What you do instead today, and why it is not good enough.
+    validations:
+      required: false

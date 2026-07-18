@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 824 824">
+  <title>Quoin</title>
+  <desc>Quoin icon: a vintage wood-type Q, cream on warm ink.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#332A20"/><stop offset="1" stop-color="#241D15"/>
+    </linearGradient>
+  </defs>
+  <rect width="824" height="824" rx="184" fill="url(#bg)"/>
+  <g stroke="#F3E9D2" fill="none">
+    <circle cx="412.0" cy="385.0" r="160.0" stroke-width="80.0"/>
+    <line x1="440.0" y1="470.0" x2="585.0" y2="630.0" stroke-width="72.0"/>
+  </g>
+</svg>

@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in Quoin behaves wrong. Tell us how to reproduce it.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Security problems do NOT go here: use the
+        Security tab (private advisory) instead, per SECURITY.md.
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "e.g. 15.5 (Sequoia)"
+    validations:
+      required: true
+  - type: input
+    id: quoin-version
+    attributes:
+      label: Quoin version
+      description: From Quoin > About Quoin, or the git commit if you built from source.
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: agent-connected
+    attributes:
+      label: Was an AI agent connected over MCP when this happened?
+      options:
+        - "No"
+        - "Yes"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps from a fresh launch. Include what you expected and what happened instead.
+      placeholder: |
+        1. Open a Markdown file
+        2. Press Cmd+Shift+M
+        3. Expected the preview; got a crash
+    validations:
+      required: true
+  - type: dropdown
+    id: repro-without-agent
+    attributes:
+      label: Does it still reproduce with the agent surface off?
+      description: 'Set "agent_server": false in settings (applies live), then retry the steps.'
+      options:
+        - "Yes, still reproduces"
+        - "No, only with the agent surface on"
+        - "Not tested"
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Crash logs, screenshots, relevant settings.jsonc overrides.
+    validations:
+      required: false
