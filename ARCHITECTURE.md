@@ -130,9 +130,11 @@ amendment is additive.
 Agents already edit files on disk (reload-on-external-change is the shared
 loop); this amendment lets them additionally SEE editor state (open buffers
 including unsaved edits, selections) and ACT through the same command
-catalog as the user. As of the assessment, no mainstream editor exposes
-live buffer + selection state to external agents; this editor's pure-data
-core makes it nearly free.
+catalog as the user. Editor plugins that expose buffer state over MCP exist
+elsewhere; here the surface is built in, and the contract is stricter: the
+agent sees exactly what the user sees, down to the unsaved keystroke, and
+every agent edit is one undo step. The pure-data core makes this nearly
+free.
 
 **What changes (all additive):**
 
