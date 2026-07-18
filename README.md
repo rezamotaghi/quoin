@@ -115,4 +115,4 @@ advisories, not issues: [SECURITY.md](SECURITY.md). Release history:
 
 MIT, see [LICENSE](LICENSE).
 
-Built by Reza Motaghi. More at [rezamotaghi.com](https://rezamotaghi.com).
+Built by Dr. Reza Motaghi. More at [rezamotaghi.com](https://rezamotaghi.com).
