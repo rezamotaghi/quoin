@@ -38,8 +38,9 @@ exists. Editors that embed a single vendor's agent make the editor the
 gatekeeper; here the editor's whole job is to give any agent honest access
 to the buffer and give you the only save button. It is one of a pair of
 agent-native instruments built on the same principle (bounded verbs for the
-agent, commit rights for the human); the other is a CBCT viewer for medical
-imaging, at [rezamotaghi.com](https://rezamotaghi.com).
+agent, commit rights for the human); the other is
+[CBCTScope](https://github.com/rezamotaghi/cbctscope), a CBCT viewer for
+medical imaging. Both at [rezamotaghi.com](https://rezamotaghi.com).
 
 ## Quickstart
 
