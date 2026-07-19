@@ -85,6 +85,15 @@ else on the machine can use those links directly.
 
 ## Editing features
 
+<p align="center">
+  <img src="Assets/screenshot-code.png" width="49%" alt="Swift source in the Mariana scheme: the code that registers each agent edit as one undo step, with tree-sitter highlighting">
+  <img src="Assets/screenshot-markdown.png" width="49%" alt="Markdown source with syntax coloring on the left, rendered preview on the right, native macOS tabs above">
+</p>
+
+*Left: tree-sitter highlighting (Mariana scheme) on the code that makes
+agent edits undoable. Right: markdown coloring beside the rendered preview,
+Cmd+Shift+M. Both are the real app, captured over its own MCP surface.*
+
 | Key | Action |
 |---|---|
 | Cmd+P | Goto Anything (fuzzy file open in the project folder) |
