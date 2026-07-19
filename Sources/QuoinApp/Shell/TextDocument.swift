@@ -43,7 +43,7 @@ final class TextDocument: NSDocument {
     // control, NOT STTextView's internal undo. Why: STTextView's undo
     // range-arithmetic corrupted full-buffer replaces, and its change-count
     // propagation to NSDocument didn't fire for programmatic edits (both
-    // found by Reza 2026-07-12). Here we capture the exact old text, do the
+    // verified in the running app). Here we capture the exact old text, do the
     // swap with STTextView's undo registration suppressed, and register the
     // one correct inverse ourselves. Result: one Cmd+Z reverts the agent
     // exactly, and the dirty dot tracks in both directions. Disk is never
@@ -164,7 +164,7 @@ final class TextDocument: NSDocument {
         guard let diskDate, diskDate != fileModificationDate else { return }
         if isDocumentEdited {
             // Unsaved edits + a changed disk file: never auto-resolve.
-            // Surface the conflict and let Reza pick (Amendment 1).
+            // Surface the conflict and let the user pick (Amendment 1).
             (windowControllers.first as? DocumentWindowController)?.showDiskConflictBanner()
             return
         }

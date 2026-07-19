@@ -4,7 +4,7 @@
 // trailing commas), watched for changes and hot-applied while the app runs.
 //
 // Key names deliberately mirror Sublime's Preferences.sublime-settings so
-// Reza's muscle memory (and his existing user prefs file) map 1:1.
+// existing muscle memory (and an existing user prefs file) maps 1:1.
 // The [Phase N] tag says when a key becomes functional; unknown keys are
 // ignored, never an error.
 {
@@ -12,8 +12,8 @@
 	"theme": "auto",                     // "auto" follows the OS appearance | "dark" | "light"
 	"dark_color_scheme": "mariana",      // scheme files live in Settings/schemes/
 	"light_color_scheme": "breakers",
-	// Reza's real Sublime rendering (read from his Mac 2026-07-09: Menlo
-	// comes from Sublime's Mac platform file, 18 from his user overrides).
+	// Menlo mirrors Sublime's Mac platform default face; 18 is a
+	// deliberate size-up from its stock size.
 	"font_face": "Menlo",                // "" = system monospace (SF Mono)  [Phase 1]
 	"font_size": 18,                     // [Phase 1]
 
@@ -56,7 +56,7 @@
 	"follow_agent_edits": false,         // front a tab when an external edit reloads it (agent "follow" mode)
 
 	// ── Cmd+P & indexing ──────────────────────────────────────────  [Phase 4]
-	// Sublime's stock lists (Reza's baseline), plus dev-tool dirs Sublime
+	// Sublime's stock lists as the baseline, plus dev-tool dirs Sublime
 	// doesn't need to know about (node_modules, .build, DerivedData, .venv*).
 	"folder_exclude_patterns": [".svn", ".git", ".hg", "CVS", ".Trash", ".Trash-*", "node_modules", ".build", ".venv*", "DerivedData"],
 	"file_exclude_patterns": ["*.pyc", "*.pyo", "*.exe", "*.dll", "*.obj", "*.o", "*.a", "*.lib", "*.so", "*.dylib", "*.ncb", "*.sdf", "*.suo", "*.pdb", "*.idb", ".DS_Store", ".directory", "desktop.ini", "*.class", "*.psd", "*.db", "*.sublime-workspace"],

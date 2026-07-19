@@ -45,7 +45,7 @@ enum MainMenu {
         .item(Item("file.save", "File: Save", "Save", "cmd+s", "saveDocument:")),
         // Custom selector on purpose: with autosave-in-place on, AppKit
         // rewrites any "saveDocumentAs:" item into Duplicate/Rename/Move To
-        // and hides Save As behind the Option key. Reza wants it visible.
+        // and hides Save As behind the Option key. Quoin keeps it visible.
         // Deliberately NO key binding: claiming cmd+shift+s made AppKit
         // render its own extra Save As alternate visibly (tested 2026-07-09);
         // unbound, the system block keeps Duplicate=cmd+shift+s and this

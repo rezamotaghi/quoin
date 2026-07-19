@@ -312,8 +312,7 @@ final class DocumentWindowController: NSWindowController {
 
     // MARK: - Markdown preview
 
-    /// Escape closes the preview (Reza's expectation, 2026-07-12): returns
-    /// whether there was one to close.
+    /// Escape closes the preview: returns whether there was one to close.
     func closePreviewIfVisible() -> Bool {
         guard previewVisible else { return false }
         toggleMarkdownPreview(nil)

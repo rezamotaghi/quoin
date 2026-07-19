@@ -1,7 +1,7 @@
 import Foundation
 
-/// The interim highlighter: hand-rolled lexers for the formats Reza reads
-/// daily (Markdown, JSON/JSONC). Deliberately behind the same HighlightSpan
+/// The interim highlighter: hand-rolled lexers for everyday formats
+/// (Markdown, JSON/JSONC). Deliberately behind the same HighlightSpan
 /// vocabulary as the future tree-sitter engine (Phase 3), so swapping engines
 /// changes zero callers. All offsets are UTF-16 code units, matching
 /// EditorCore's convention.

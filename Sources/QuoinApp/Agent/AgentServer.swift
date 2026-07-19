@@ -235,10 +235,10 @@ final class AgentServer {
         NSDocumentController.shared.documents.compactMap { $0 as? TextDocument }
     }
 
-    /// "The document Reza is looking at." NSDocumentController.currentDocument
-    /// goes nil whenever the app is INACTIVE, and agents essentially always
-    /// ask while the user is focused on their terminal, so relying on it made
-    /// every query see no front document (found by Reza 2026-07-12). Window
+    /// "The document the user is looking at." NSDocumentController
+    /// .currentDocument goes nil whenever the app is INACTIVE, and agents
+    /// essentially always ask while the user is focused on their terminal,
+    /// so relying on it made every query see no front document. Window
     /// z-order survives deactivation: the top document window is the answer.
     private func frontDocument() -> TextDocument? {
         if let current = NSDocumentController.shared.currentDocument as? TextDocument {

@@ -51,7 +51,7 @@ private final class EditorTextView: STTextView {
         super.cut(sender)
     }
 
-    // MARK: Multi-caret TYPING (Phase 6 fix, found by Reza 2026-07-12).
+    // MARK: Multi-caret TYPING (Phase 6 fix).
     // Upstream STTextView inserts at all carets but then collapses the
     // selection to a single caret, so only the first keystroke lands
     // everywhere. We replay the edit per caret (back to front, so earlier

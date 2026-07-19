@@ -135,3 +135,6 @@ advisories, not issues: [SECURITY.md](SECURITY.md). Release history:
 MIT, see [LICENSE](LICENSE).
 
 Built by Dr. Reza Motaghi. More at [rezamotaghi.com](https://rezamotaghi.com).
+
+Sublime Text is a trademark of Sublime HQ Pty Ltd. Quoin is an independent
+project, not affiliated with or endorsed by Sublime HQ.

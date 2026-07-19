@@ -1,4 +1,4 @@
-// Mariana: Sublime Text's default dark scheme, transcribed for Quoin.
+// Mariana: Quoin's default dark scheme. Palette lineage: Oceanic Next (MIT).
 // Rule keys are semantic style names from the tree-sitter highlight queries
 // (dotted names fall back: "keyword.function" -> "keyword"). Edit freely;
 // the app reloads schemes on relaunch.

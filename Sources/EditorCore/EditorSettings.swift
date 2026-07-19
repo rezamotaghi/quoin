@@ -12,8 +12,8 @@ public struct EditorSettings: Equatable, Sendable {
     public var theme: String = "auto"          // "auto" follows the OS appearance | "dark" | "light"
     public var darkColorScheme: String = "mariana"
     public var lightColorScheme: String = "breakers"
-    // Reza's real Sublime rendering (read from his machine 2026-07-09):
-    // Menlo from Sublime's Mac platform file, 18 from his user overrides.
+    // Menlo mirrors Sublime's Mac platform default face; 18 is a
+    // deliberate size-up from its stock size.
     public var fontFace: String = "Menlo"      // "" = system monospace
     public var fontSize: Double = 18
     public var tabSize: Int = 4
