@@ -24,6 +24,21 @@ first-class too: read this file and ARCHITECTURE.md before writing code.
 - **No em dashes in any user-facing string or doc** (menu items, palette
   titles, dialogs, error text). Use a colon, comma, or period.
 
+## Cutting a release
+
+A version bump is a short checklist, all in the same commit:
+
+1. `CITATION.cff` `version:` and `date-released:` (the day the release can first
+   exist);
+2. `Resources/Info.plist` `CFBundleShortVersionString` (same string) and
+   `CFBundleVersion` (increment);
+3. `Sources/QuoinMCP/main.swift`, the `Server(... version:)` string;
+4. `CHANGELOG.md`: a dated section plus its tag link at the bottom.
+
+Then tag, publish the GitHub release, and in the same sitting update the
+downstream surfaces per the Vault page's release ritual. A release is not
+done until they read it.
+
 ## Environment constraints (why the build is SwiftPM-only)
 
 The build assumes the Swift toolchain from Command Line Tools alone, with
