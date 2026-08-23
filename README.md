@@ -134,8 +134,8 @@ advisories, not issues: [SECURITY.md](SECURITY.md). Release history:
 
 MIT, see [LICENSE](LICENSE).
 
-Built by Dr. Reza Motaghi, an oral and maxillofacial radiologist who builds, trains
-and evaluates the imaging AI he reads with. More at [rezamotaghi.com](https://rezamotaghi.com).
+Built by Dr. Reza Motaghi, an oral and maxillofacial radiologist who trains imaging
+models on his own reads and tests them on cases they have never seen. More at [rezamotaghi.com](https://rezamotaghi.com).
 
 Sublime Text is a trademark of Sublime HQ Pty Ltd. Quoin is an independent
 project, not affiliated with or endorsed by Sublime HQ.
