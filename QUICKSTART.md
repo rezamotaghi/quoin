@@ -16,7 +16,8 @@ open build/Quoin.app
 
 Want it in the Dock permanently? Run `Scripts/bundle-app.sh --install`:
 it builds and refreshes `/Applications/Quoin.app` in one step. Pin that
-copy and re-run with `--install` after upgrades.
+copy; from then on every plain `Scripts/bundle-app.sh` run keeps it
+current automatically (`--no-install` skips that).
 
 ## 2. First launch
 

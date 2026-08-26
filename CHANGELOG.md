@@ -6,6 +6,14 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The
 nine `quoin_*` MCP verbs are part of the public API: a breaking change to
 their names, parameters, or semantics is a major version bump.
 
+## [Unreleased]
+
+### Changed
+
+- `Scripts/bundle-app.sh` now refreshes an existing `/Applications/Quoin.app`
+  on every run, so an installed copy never falls behind the repo. First
+  install remains opt-in (`--install`); `--no-install` skips the refresh.
+
 ## [1.0.0] - 2026-07-18
 
 Initial public release.

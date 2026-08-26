@@ -30,10 +30,14 @@ codesign --force --sign - "$APP"
 
 echo "Built $APP  (open with: open $APP)"
 
-# Optional: refresh the installed copy so Spotlight and the Dock track the
-# latest build. Opt-in by flag; a build script should not write to
-# /Applications unasked.
-if [[ "${1:-}" == "--install" ]]; then
-  ditto "$APP" /Applications/Quoin.app
-  echo "Installed /Applications/Quoin.app"
+# Keep the installed copy current. An existing /Applications/Quoin.app is
+# standing consent to keep it updated: a stale installed copy next to a
+# fresh repo means two versions of the same bundle id on one machine, and
+# that way lie dual instances and misrouted events. First install stays
+# opt-in (--install); --no-install skips the refresh.
+if [[ "${1:-}" != "--no-install" ]]; then
+  if [[ "${1:-}" == "--install" || -d /Applications/Quoin.app ]]; then
+    ditto "$APP" /Applications/Quoin.app
+    echo "Installed /Applications/Quoin.app"
+  fi
 fi

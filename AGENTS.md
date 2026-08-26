@@ -13,7 +13,10 @@ first-class too: read this file and ARCHITECTURE.md before writing code.
 - **Verify with this repo's gates before claiming done:**
   ```bash
   swift build && swift test        # must be green
-  Scripts/bundle-app.sh            # must produce build/Quoin.app
+  Scripts/bundle-app.sh            # must produce build/Quoin.app; also
+                                   # refreshes /Applications/Quoin.app when
+                                   # one is installed (never leave the
+                                   # installed copy behind the repo)
   open build/Quoin.app             # for changes to visible behavior
   ```
 - **"It compiles and tests pass" is not "done" for document plumbing.** Save,

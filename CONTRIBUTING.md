@@ -15,7 +15,10 @@ Scripts/bundle-app.sh    # wrap the release binary into build/Quoin.app
 ```
 
 `bundle-app.sh --install` additionally copies the fresh bundle to
-`/Applications/Quoin.app`. It never does that without the flag.
+`/Applications/Quoin.app`. Once that copy exists, every later run
+refreshes it automatically, so the installed app never falls behind the
+repo; `--no-install` skips the refresh. It never touches /Applications
+on a machine where Quoin was not installed.
 
 Tests use Swift Testing (`import Testing`, `@Test`, `#expect`), not XCTest.
 Add tests in the same style next to the ones that already cover the module
