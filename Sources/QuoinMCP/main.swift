@@ -39,11 +39,10 @@ enum EditorSocket {
         .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent("Quoin/agent.sock").path
 
-    static func call(method: String, params: [String: AgentJSON]? = nil) throws -> AgentJSON {
+    /// A connected socket to the app, or notRunning.
+    static func connect() throws -> Int32 {
         let fd = socket(AF_UNIX, SOCK_STREAM, 0)
         guard fd >= 0 else { throw EditorSocketError.notRunning }
-        defer { close(fd) }
-
         var address = sockaddr_un()
         address.sun_family = sa_family_t(AF_UNIX)
         withUnsafeMutableBytes(of: &address.sun_path) { raw in
@@ -53,23 +52,35 @@ enum EditorSocket {
         }
         let connected = withUnsafePointer(to: &address) { pointer in
             pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
+                Darwin.connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
             }
         }
-        guard connected == 0 else { throw EditorSocketError.notRunning }
-
-        guard let request = AgentWire.encodeLine(AgentRequest(id: 1, method: method, params: params)) else {
-            throw EditorSocketError.protocolError("could not encode request")
+        guard connected == 0 else {
+            close(fd)
+            throw EditorSocketError.notRunning
         }
+        return fd
+    }
+
+    static func write(_ data: Data, to fd: Int32) throws {
         var sent = 0
-        let total = request.count
-        try request.withUnsafeBytes { (raw: UnsafeRawBufferPointer) in
+        let total = data.count
+        try data.withUnsafeBytes { (raw: UnsafeRawBufferPointer) in
             while sent < total {
-                let n = write(fd, raw.baseAddress!.advanced(by: sent), total - sent)
+                let n = Foundation.write(fd, raw.baseAddress!.advanced(by: sent), total - sent)
                 guard n > 0 else { throw EditorSocketError.notRunning }
                 sent += n
             }
         }
+    }
+
+    static func call(method: String, params: [String: AgentJSON]? = nil) throws -> AgentJSON {
+        let fd = try connect()
+        defer { close(fd) }
+        guard let request = AgentWire.encodeLine(AgentRequest(id: 1, method: method, params: params)) else {
+            throw EditorSocketError.protocolError("could not encode request")
+        }
+        try write(request, to: fd)
 
         var received = Data()
         var chunk = [UInt8](repeating: 0, count: 65536)
@@ -324,6 +335,86 @@ let prompts: [ShimPrompt] = [
     ),
 ]
 
+// MARK: - Push: buffer-change events over one persistent connection
+
+/// The one long-lived socket connection a host's subscriptions ride on. The
+/// request path stays one-shot; this connection sends `subscribe` once and
+/// then only listens. Each `buffer_changed` line becomes a
+/// notifications/resources/updated for every subscribed URI it matches
+/// (quoin://buffer follows the front document, quoin://buffer/<path> one file).
+final class EventStream: @unchecked Sendable {
+    private let server: Server
+    private let lock = NSLock()
+    private var uris: Set<String> = []
+    private var fd: Int32 = -1
+
+    init(server: Server) {
+        self.server = server
+    }
+
+    func subscribe(_ uri: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        uris.insert(uri)
+        guard fd < 0 else { return }
+        let socket = try EditorSocket.connect()
+        guard let line = AgentWire.encodeLine(AgentRequest(id: 0, method: "subscribe")) else {
+            close(socket)
+            throw EditorSocketError.protocolError("could not encode subscribe")
+        }
+        do {
+            try EditorSocket.write(line, to: socket)
+        } catch {
+            close(socket)
+            throw error
+        }
+        fd = socket
+        Thread.detachNewThread { [weak self] in self?.readLoop(socket) }
+    }
+
+    func unsubscribe(_ uri: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        uris.remove(uri)
+    }
+
+    private func readLoop(_ socket: Int32) {
+        var buffer = Data()
+        var chunk = [UInt8](repeating: 0, count: 65536)
+        while true {
+            let n = read(socket, &chunk, chunk.count)
+            guard n > 0 else { break }
+            buffer.append(contentsOf: chunk[0..<n])
+            while let newline = buffer.firstIndex(of: 0x0A) {
+                let line = buffer.subdata(in: buffer.startIndex..<newline)
+                buffer.removeSubrange(buffer.startIndex...newline)
+                // The subscribe reply (an id, no event) decodes to nil here.
+                if let event = AgentWire.decode(AgentEvent.self, from: line), event.event == "buffer_changed" {
+                    deliver(event)
+                }
+            }
+        }
+        close(socket)
+        lock.lock()
+        fd = -1
+        lock.unlock()
+    }
+
+    private func deliver(_ event: AgentEvent) {
+        lock.lock()
+        let matches = uris.filter { uri in
+            if uri == ResourceURI.buffer { return event.front }
+            if let path = event.path { return uri == ResourceURI.buffer(path: path) }
+            return false
+        }
+        lock.unlock()
+        let server = self.server
+        for uri in matches {
+            Task { try? await server.notify(ResourceUpdatedNotification.message(.init(uri: uri))) }
+        }
+    }
+}
+
 // MARK: - Value <-> AgentJSON bridges (both are plain JSON models)
 
 func agentJSON(from value: Value) -> AgentJSON? {
@@ -358,7 +449,7 @@ let server = Server(
     instructions: "Bridge to the running Quoin.app: read open buffers (unsaved edits included) and selections, open files at lines, edit buffers as single undoable steps, and run editor commands. The agent proposes in the buffer; only the human saves, reverts, closes, or quits.",
     capabilities: .init(
         prompts: .init(listChanged: false),
-        resources: .init(subscribe: false, listChanged: false),
+        resources: .init(subscribe: true, listChanged: false),
         tools: .init(listChanged: false)
     )
 )
@@ -451,6 +542,25 @@ await server.withMethodHandler(ReadResource.self) { parameters in
     } catch let error as EditorSocketError {
         throw MCPError.internalError(error.description)
     }
+}
+
+let events = EventStream(server: server)
+
+await server.withMethodHandler(ResourceSubscribe.self) { parameters in
+    guard let parsed = ResourceURI.parse(parameters.uri), parsed.kind == "buffer" else {
+        throw MCPError.invalidParams("only buffer resources can be subscribed: \(parameters.uri)")
+    }
+    do {
+        try events.subscribe(parameters.uri)
+    } catch let error as EditorSocketError {
+        throw MCPError.internalError(error.description)
+    }
+    return Empty()
+}
+
+await server.withMethodHandler(ResourceUnsubscribe.self) { parameters in
+    events.unsubscribe(parameters.uri)
+    return Empty()
 }
 
 await server.withMethodHandler(ListPrompts.self) { _ in

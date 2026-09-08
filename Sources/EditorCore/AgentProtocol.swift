@@ -77,6 +77,23 @@ public struct AgentResponse: Codable, Sendable {
     }
 }
 
+/// Amendment 2, push: a server-initiated line (it carries no `id`) on a
+/// connection that sent `subscribe`. One kind so far, "buffer_changed",
+/// emitted after the editor's own 150 ms debounce for typing, agent edits,
+/// and reloads alike; `front` says whether that document is the one the
+/// user is looking at, `path` is nil for an untitled buffer.
+public struct AgentEvent: Codable, Equatable, Sendable {
+    public var event: String
+    public var path: String?
+    public var front: Bool
+
+    public init(event: String, path: String? = nil, front: Bool) {
+        self.event = event
+        self.path = path
+        self.front = front
+    }
+}
+
 public enum AgentWire {
     /// One request/response per line: encode compactly, no raw newlines.
     public static func encodeLine(_ value: some Encodable) -> Data? {

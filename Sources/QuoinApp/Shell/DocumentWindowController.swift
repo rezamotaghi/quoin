@@ -295,6 +295,7 @@ final class DocumentWindowController: NSWindowController {
         pane.translateTabsOverride = document.detectedIndentUsesSpaces
         document.undoManager?.removeAllActions()
         refreshDerived()
+        AgentServer.shared.noteBufferChanged(document) // a reload is a buffer change too
         // follow_agent_edits: when an outside process (usually an agent)
         // rewrote this file and we reloaded it, surface its tab.
         if SettingsStore.shared.settings.followAgentEdits, let window {
@@ -321,8 +322,9 @@ final class DocumentWindowController: NSWindowController {
         derivedRefreshTask?.cancel()
         derivedRefreshTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 150_000_000)
-            guard !Task.isCancelled else { return }
-            self?.refreshDerived()
+            guard !Task.isCancelled, let self else { return }
+            self.refreshDerived()
+            AgentServer.shared.noteBufferChanged(self.textDocument) // push, Amendment 2
         }
     }
 

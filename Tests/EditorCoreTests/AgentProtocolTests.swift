@@ -35,6 +35,19 @@ import Testing
         #expect(AgentJSON.string("x").intValue == nil)
     }
 
+    /// An event line has no id, so a client reading a stream can tell it from
+    /// a response by trying AgentResponse first; an untitled buffer's path is
+    /// simply absent.
+    @Test func eventLinesAreNotResponses() throws {
+        let event = AgentEvent(event: "buffer_changed", path: nil, front: true)
+        let data = try #require(AgentWire.encodeLine(event))
+        #expect(AgentWire.decode(AgentResponse.self, from: data.dropLast()) == nil)
+        let decoded = try #require(AgentWire.decode(AgentEvent.self, from: data.dropLast()))
+        #expect(decoded == event)
+        let named = AgentEvent(event: "buffer_changed", path: "/tmp/a.md", front: false)
+        #expect(AgentWire.decode(AgentEvent.self, from: AgentWire.encodeLine(named)!.dropLast()) == named)
+    }
+
     @Test func malformedLineDecodesToNil() {
         #expect(AgentWire.decode(AgentRequest.self, from: Data("{oops".utf8)) == nil)
     }

@@ -23,6 +23,9 @@ final class AgentServer {
 
     private var listener: NWListener?
     private var connections: [NWConnection] = []
+    /// Connections that sent `subscribe` (Amendment 2, push): they receive
+    /// one AgentEvent line per buffer change until they disconnect.
+    private var subscribers: Set<ObjectIdentifier> = []
 
     /// Agent > Agent Status reads these.
     var isListening: Bool { listener != nil }
@@ -68,6 +71,20 @@ final class AgentServer {
     private nonisolated func drop(_ connection: NWConnection) {
         Task { @MainActor in
             connections.removeAll { $0 === connection }
+            subscribers.remove(ObjectIdentifier(connection))
+        }
+    }
+
+    /// Push a buffer change to every subscribed connection, after the same
+    /// 150 ms debounce the syntax colors use. Typing, agent edits, and
+    /// reloads all arrive here; the shim maps the event to the resources a
+    /// host subscribed to (notifications/resources/updated).
+    func noteBufferChanged(_ document: TextDocument?) {
+        guard let document, !subscribers.isEmpty else { return }
+        let event = AgentEvent(event: "buffer_changed", path: document.fileURL?.path, front: document === frontDocument())
+        guard let data = AgentWire.encodeLine(event) else { return }
+        for connection in connections where subscribers.contains(ObjectIdentifier(connection)) {
+            connection.send(content: data, completion: .contentProcessed { _ in })
         }
     }
 
@@ -95,7 +112,17 @@ final class AgentServer {
     private func respond(to line: Data, on connection: NWConnection) {
         let response: AgentResponse
         if let request = AgentWire.decode(AgentRequest.self, from: line) {
-            response = handle(request)
+            switch request.method {
+            // Subscriptions belong to the connection, not to a document.
+            case "subscribe":
+                subscribers.insert(ObjectIdentifier(connection))
+                response = AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
+            case "unsubscribe":
+                subscribers.remove(ObjectIdentifier(connection))
+                response = AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
+            default:
+                response = handle(request)
+            }
         } else {
             response = AgentResponse(id: -1, error: "unparseable request line")
         }
