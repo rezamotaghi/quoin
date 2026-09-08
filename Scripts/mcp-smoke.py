@@ -26,7 +26,7 @@ EXPECTED_TOOLS = {
 }
 READ_ONLY_TOOLS = {"quoin_list_open_documents", "quoin_read_buffer", "quoin_read_lines", "quoin_get_selection", "quoin_list_commands"}
 EXPECTED_PROMPTS = {"proofread-selection", "review-buffer", "undo-tour"}
-COMMIT_CLASS = {"file.save", "file.saveAs", "file.saveAll", "file.revert", "file.close", "app.quit"}
+COMMIT_CLASS = {"file.save", "file.saveAs", "file.revert", "file.close", "app.quit"}
 
 
 class Shim:
@@ -233,6 +233,34 @@ def main():
             time.sleep(0.3)
             clean = call_tool(shim, "quoin_read_buffer")["structuredContent"]
             check(clean["text"] == "" and clean["dirty"] is False, "the second undo leaves the Untitled buffer empty and clean")
+
+            # The menu's line commands are agent-runnable too (invariants 3
+            # and 6): each is one undo step, same as an agent edit.
+            def run(command):
+                result = call_tool(shim, "quoin_run_command", {"id": command})
+                check(not result.get("isError"), f"run_command {command}")
+                time.sleep(0.2)
+
+            def buffer_text():
+                return call_tool(shim, "quoin_read_buffer")["structuredContent"]["text"]
+
+            seeded = call_tool(shim, "quoin_set_text", {"text": "b\na\nc"})
+            check(not seeded.get("isError"), "quoin_set_text seeds lines for the command checks")
+            run("edit.sortLines")
+            check(buffer_text() == "a\nb\nc", "Edit > Sort Lines sorts the selected lines")
+            run("edit.duplicateLine")
+            check(buffer_text() == "a\nb\nc\na\nb\nc", "Edit > Line > Duplicate Line copies the block below itself")
+            run("view.syntaxSwift")
+            run("edit.toggleComment")
+            check(buffer_text() == "a\nb\nc\n// a\n// b\n// c", "View > Syntax > Swift, then Toggle Comment comments the block")
+            run("edit.toggleComment")
+            check(buffer_text() == "a\nb\nc\na\nb\nc", "Toggle Comment again uncomments it")
+            run("edit.reverseLines")
+            check(buffer_text() == "a\nb\nc\nc\nb\na", "Edit > Permute Lines > Reverse reverses the block")
+            for _ in range(6):
+                run("edit.undo")
+            final = call_tool(shim, "quoin_read_buffer")["structuredContent"]
+            check(final["text"] == "" and final["dirty"] is False, "six undos peel six command edits back to an empty, clean buffer")
             print("  note  the empty Untitled tab stays open; closing is the human's.")
     finally:
         shim.close()

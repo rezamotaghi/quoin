@@ -64,18 +64,24 @@ final class TextDocument: NSDocument {
     // touched; the user's save is the only thing that writes.
 
     /// Replace a UTF-16 range with text as a single undoable buffer edit.
-    /// Returns false if the range is out of bounds.
+    /// Returns false if the range is out of bounds. Agent writes use the
+    /// default action name ("AI Edit", what Edit > Undo shows and what
+    /// Agent > Undo Last Agent Edit checks); the menu's line commands pass
+    /// their own name and the selection they want afterwards.
     @discardableResult
-    func replaceTextUndoable(range: Range<Int>, with newText: String) -> Bool {
+    func replaceTextUndoable(range: Range<Int>, with newText: String,
+                             actionName: String = "AI Edit", selectionAfter: Selection? = nil) -> Bool {
         guard let wc = windowControllers.first as? DocumentWindowController else { return false }
         let length = (wc.currentText as NSString).length
         guard range.lowerBound >= 0, range.upperBound <= length, range.lowerBound <= range.upperBound else { return false }
         let oldText = (wc.currentText as NSString).substring(with: NSRange(location: range.lowerBound, length: range.count))
-        applyUndoableReplace(range: range, newText: newText, oldText: oldText, in: wc)
+        applyUndoableReplace(range: range, newText: newText, oldText: oldText, in: wc,
+                             actionName: actionName, selectionAfter: selectionAfter)
         return true
     }
 
-    private func applyUndoableReplace(range: Range<Int>, newText: String, oldText: String, in wc: DocumentWindowController) {
+    private func applyUndoableReplace(range: Range<Int>, newText: String, oldText: String, in wc: DocumentWindowController,
+                                      actionName: String, selectionAfter: Selection?) {
         // The inverse edit: replace what we're about to insert with what was
         // there. Registered before the swap; the closure re-registers its
         // own inverse (redo) when it runs, the standard NSUndoManager dance.
@@ -93,10 +99,11 @@ final class TextDocument: NSDocument {
         undoManager?.registerUndo(withTarget: self) { doc in
             MainActor.assumeIsolated {
                 guard let wc = doc.windowControllers.first as? DocumentWindowController else { return }
-                doc.applyUndoableReplace(range: newRange, newText: oldText, oldText: newText, in: wc)
+                doc.applyUndoableReplace(range: newRange, newText: oldText, oldText: newText, in: wc,
+                                         actionName: actionName, selectionAfter: nil)
             }
         }
-        undoManager?.setActionName("AI Edit")
+        undoManager?.setActionName(actionName)
 
         // Suppress STTextView's own undo registration for this swap.
         undoManager?.disableUndoRegistration()
@@ -110,7 +117,11 @@ final class TextDocument: NSDocument {
         else if redoing { updateChangeCount(.changeRedone) }
         else { updateChangeCount(.changeDone) }
 
-        wc.showEditedRange(newRange)
+        if let selectionAfter, !undoing, !redoing {
+            wc.setSelection(selectionAfter)
+        } else {
+            wc.showEditedRange(newRange)
+        }
     }
 
     override func save(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType, completionHandler: @escaping ((any Error)?) -> Void) {

@@ -231,7 +231,7 @@ let tools: [ShimTool] = [
              arguments: [arg("text", "The full new document text.", required: true), pathArg],
              readOnly: false, idempotent: true, output: okSchema),
     makeTool("quoin_run_command",
-             "Run a Quoin command by id (see quoin_list_commands), e.g. edit.undo or view.toggleMarkdownPreview. Commit-class commands (save, save as, save all, revert, close, quit) are refused: those are the human's.",
+             "Run a Quoin command by id (see quoin_list_commands), e.g. edit.undo or view.toggleMarkdownPreview. Commit-class commands (save, save as, revert, close, quit) are refused: those are the human's.",
              method: "run_command",
              arguments: [arg("id", "Command id from quoin_list_commands.", required: true)],
              readOnly: false, idempotent: false, output: okSchema),
@@ -463,7 +463,7 @@ await server.withMethodHandler(GetPrompt.self) { parameters in
     }
     return GetPrompt.Result(
         description: shimPrompt.prompt.description,
-        messages: [Prompt.Message(role: .user, content: .text(text: shimPrompt.text(parameters.arguments ?? [:])))]
+        messages: [.user(.text(text: shimPrompt.text(parameters.arguments ?? [:])))]
     )
 }
 

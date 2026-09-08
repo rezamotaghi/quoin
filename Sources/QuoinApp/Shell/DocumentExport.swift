@@ -96,33 +96,12 @@ extension TextDocument {
     /// Classic Cocoa print-to-PDF: lay the text out in an offscreen
     /// NSTextView and run a panel-less NSPrintOperation whose job
     /// disposition is "save to URL". NSPrintOperation paginates for us.
-    /// Paper idiom, not editor idiom: black text on white, regardless of the
-    /// app theme.
     private func exportPDF(to url: URL) throws {
         let printInfo = NSPrintInfo()
-        printInfo.horizontalPagination = .fit
-        printInfo.verticalPagination = .automatic
-        printInfo.topMargin = 36
-        printInfo.bottomMargin = 36
-        printInfo.leftMargin = 36
-        printInfo.rightMargin = 36
+        Self.configurePaper(printInfo)
         printInfo.jobDisposition = .save
         printInfo.dictionary()[NSPrintInfo.AttributeKey.jobSavingURL] = url
-
-        let settings = SettingsStore.shared.settings
-        let font = settings.fontFace.isEmpty
-            ? NSFont.monospacedSystemFont(ofSize: settings.fontSize, weight: .regular)
-            : NSFont(name: settings.fontFace, size: settings.fontSize)
-                ?? NSFont.monospacedSystemFont(ofSize: settings.fontSize, weight: .regular)
-
-        let contentWidth = printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin
-        let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: contentWidth, height: 1))
-        textView.string = liveText
-        textView.font = font
-        textView.textColor = .black
-        textView.drawsBackground = false
-
-        let operation = NSPrintOperation(view: textView, printInfo: printInfo)
+        let operation = NSPrintOperation(view: printableTextView(for: printInfo), printInfo: printInfo)
         operation.showsPrintPanel = false
         operation.showsProgressPanel = false
         guard operation.run() else {
@@ -130,5 +109,42 @@ extension TextDocument {
                 NSLocalizedDescriptionKey: "The PDF could not be written to \(url.path).",
             ])
         }
+    }
+
+    /// File > Print: the same paginated layout as the PDF export, through
+    /// the standard print panel (NSDocument's printDocument: lands here).
+    override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey: Any]) throws -> NSPrintOperation {
+        let printInfo = NSPrintInfo(dictionary: printSettings)
+        Self.configurePaper(printInfo)
+        let operation = NSPrintOperation(view: printableTextView(for: printInfo), printInfo: printInfo)
+        operation.showsPrintPanel = true
+        operation.showsProgressPanel = true
+        return operation
+    }
+
+    private static func configurePaper(_ printInfo: NSPrintInfo) {
+        printInfo.horizontalPagination = .fit
+        printInfo.verticalPagination = .automatic
+        printInfo.topMargin = 36
+        printInfo.bottomMargin = 36
+        printInfo.leftMargin = 36
+        printInfo.rightMargin = 36
+    }
+
+    /// Paper idiom, not editor idiom: black text on white, regardless of the
+    /// app theme, in the editor's font.
+    private func printableTextView(for printInfo: NSPrintInfo) -> NSTextView {
+        let settings = SettingsStore.shared.settings
+        let font = settings.fontFace.isEmpty
+            ? NSFont.monospacedSystemFont(ofSize: settings.fontSize, weight: .regular)
+            : NSFont(name: settings.fontFace, size: settings.fontSize)
+                ?? NSFont.monospacedSystemFont(ofSize: settings.fontSize, weight: .regular)
+        let contentWidth = printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin
+        let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: contentWidth, height: 1))
+        textView.string = liveText
+        textView.font = font
+        textView.textColor = .black
+        textView.drawsBackground = false
+        return textView
     }
 }

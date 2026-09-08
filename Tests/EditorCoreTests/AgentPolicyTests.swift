@@ -9,7 +9,7 @@ import Testing
     /// contract change, so the test pins every member.
     @Test func commitClassListIsExactlyTheHumanRights() {
         #expect(AgentPolicy.commitClassCommands == [
-            "file.save", "file.saveAs", "file.saveAll", "file.revert", "file.close", "app.quit",
+            "file.save", "file.saveAs", "file.revert", "file.close", "app.quit",
         ])
     }
 

@@ -55,6 +55,18 @@ final class SettingsStore {
         watchUserFile()
     }
 
+    /// Menu toggles (View > Word Wrap, Theme, Font size, the Agent menu)
+    /// write the user's settings file: one key upserted in place, comments
+    /// and formatting kept, so the file stays the source of truth and stays
+    /// theirs. The change applies immediately; the watcher's own reload
+    /// then finds nothing new.
+    func setUserSetting(_ key: String, jsonValue: String) {
+        let current = (try? String(contentsOf: userFileURL, encoding: .utf8)) ?? "{\n}\n"
+        let updated = JSONC.upserting(key: key, jsonValue: jsonValue, in: current)
+        try? updated.write(to: userFileURL, atomically: true, encoding: .utf8)
+        reload(notify: true)
+    }
+
     private func reload(notify: Bool) {
         var layers: [String] = []
         if let bundled = Bundle.main.url(forResource: "default-settings", withExtension: "jsonc"),

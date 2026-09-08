@@ -24,6 +24,10 @@ final class AgentServer {
     private var listener: NWListener?
     private var connections: [NWConnection] = []
 
+    /// Agent > Agent Status reads these.
+    var isListening: Bool { listener != nil }
+    private(set) var editCount = 0
+
     func applySettings(_ settings: EditorSettings) {
         settings.agentServer ? start() : stop()
     }
@@ -200,6 +204,7 @@ final class AgentServer {
             guard wc.applyAgentEdit(range: primary.range, text: text) else {
                 return AgentResponse(id: request.id, error: "selection out of bounds")
             }
+            editCount += 1
             return AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
 
         case "apply_edit":
@@ -214,6 +219,7 @@ final class AgentServer {
             guard wc.applyAgentEdit(range: min(anchor, head)..<max(anchor, head), text: text) else {
                 return AgentResponse(id: request.id, error: "range out of bounds (offsets are UTF-16)")
             }
+            editCount += 1
             return AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
 
         case "set_text":
@@ -228,6 +234,7 @@ final class AgentServer {
             guard wc.applyAgentEdit(range: fullRange, text: text) else {
                 return AgentResponse(id: request.id, error: "buffer replace failed")
             }
+            editCount += 1
             return AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
 
         // Line-addressed write: rewrite lines from...to (1-based, inclusive)
@@ -247,6 +254,7 @@ final class AgentServer {
                   wc.applyAgentEdit(range: range, text: text) else {
                 return AgentResponse(id: request.id, error: "line range out of bounds (this buffer has lines 1...\(total))")
             }
+            editCount += 1
             return AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
 
         case "run_command":

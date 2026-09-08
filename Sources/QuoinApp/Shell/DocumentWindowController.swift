@@ -14,8 +14,8 @@ final class DocumentWindowController: NSWindowController {
     /// text buffer; panes[0] is primary (saves read from it, reloads write
     /// through it, and the shared storage propagates to the rest).
     private var panes: [any EditorPane] = []
-    private var pane: any EditorPane { panes[0] }
-    private weak var textDocument: TextDocument?
+    var pane: any EditorPane { panes[0] }
+    weak var textDocument: TextDocument?
 
     // Editor on the left, (optional) rendered Markdown preview on the right.
     private let splitView = NSSplitView()
@@ -152,7 +152,54 @@ final class DocumentWindowController: NSWindowController {
     /// the range is out of bounds. The document owns the undo/dirty logic
     /// (see TextDocument.replaceTextUndoable); this just forwards.
     func applyAgentEdit(range: Range<Int>, text: String) -> Bool {
-        textDocument?.replaceTextUndoable(range: range, with: text) ?? false
+        guard textDocument?.replaceTextUndoable(range: range, with: text) == true else { return false }
+        noteAgentEdit()
+        return true
+    }
+
+    /// Put one selection in the primary pane and scroll to it (the menu's
+    /// line commands hand the document the selection they want afterwards).
+    func setSelection(_ selection: Selection) {
+        pane.selectionSet = SelectionSet([selection])
+        pane.reveal(offset: selection.head)
+    }
+
+    /// View > Indentation > Indent Using Spaces: a per-document override of
+    /// translate_tabs_to_spaces, on every pane of this window.
+    func setIndentUsesSpaces(_ spaces: Bool) {
+        for pane in panes { pane.translateTabsOverride = spaces }
+    }
+
+    // MARK: - Agent presence (Amendment 2)
+
+    private var agentAccessory: NSTitlebarAccessoryViewController?
+    private let agentLabel = NSTextField(labelWithString: "")
+    /// Agent edits applied in this window since it opened.
+    private(set) var agentEditCount = 0
+
+    /// A quiet chip at the right of the title bar, from the first agent edit
+    /// on: the contract made visible where the edit landed.
+    func noteAgentEdit() {
+        agentEditCount += 1
+        agentLabel.stringValue = agentEditCount == 1
+            ? "1 agent edit, Cmd+Z reverts it"
+            : "\(agentEditCount) agent edits, Cmd+Z reverts one at a time"
+        agentLabel.sizeToFit()
+        if agentAccessory == nil {
+            agentLabel.font = .systemFont(ofSize: 11)
+            agentLabel.textColor = .secondaryLabelColor
+            agentLabel.sizeToFit()
+            let container = NSView()
+            container.addSubview(agentLabel)
+            let accessory = NSTitlebarAccessoryViewController()
+            accessory.view = container
+            accessory.layoutAttribute = .right
+            window?.addTitlebarAccessoryViewController(accessory)
+            agentAccessory = accessory
+        }
+        let size = agentLabel.frame.size
+        agentAccessory?.view.frame = NSRect(x: 0, y: 0, width: size.width + 12, height: size.height + 6)
+        agentLabel.frame.origin = NSPoint(x: 0, y: 3)
     }
 
     /// The raw buffer swap the document's undoable operation drives. Called
@@ -257,8 +304,12 @@ final class DocumentWindowController: NSWindowController {
 
     // MARK: - Derived content (syntax colors + Markdown preview)
 
-    private var fileExtension: String {
-        (textDocument?.fileURL?.pathExtension
+    /// View > Syntax: a per-document override of the language the file
+    /// extension implies, as a file extension the highlighter factory reads.
+    var syntaxOverride: String?
+
+    var fileExtension: String {
+        syntaxOverride ?? (textDocument?.fileURL?.pathExtension
             ?? ((textDocument?.displayName ?? "") as NSString).pathExtension).lowercased()
     }
 
@@ -275,7 +326,7 @@ final class DocumentWindowController: NSWindowController {
         }
     }
 
-    private func refreshDerived() {
+    func refreshDerived() {
         applyHighlights()
         renderPreview()
     }
@@ -359,7 +410,11 @@ extension DocumentWindowController: NSUserInterfaceValidations {
             if let menuItem = item as? NSMenuItem { menuItem.state = previewVisible ? .on : .off }
             return isMarkdownDocument
         }
-        return true
+        if item.action == #selector(toggleSplitEditor(_:)) {
+            if let menuItem = item as? NSMenuItem { menuItem.state = panes.count > 1 ? .on : .off }
+            return true
+        }
+        return validateCommandItem(item) ?? true
     }
 }
 

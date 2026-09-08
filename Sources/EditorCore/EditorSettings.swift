@@ -188,4 +188,116 @@ public enum JSONC {
         guard let data = json.data(using: .utf8) else { return nil }
         return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
     }
+
+    /// Set one top-level key of a JSONC document to `jsonValue` (already
+    /// JSON-encoded, e.g. `true`, `14`, `"dark"`, `["all"]`), keeping every
+    /// comment and the rest of the formatting: the value of an existing key
+    /// is replaced in place, a new key is inserted after the opening brace.
+    /// The menu's toggles write the user's settings file through this, so the
+    /// file stays theirs (comments and all) and the file watcher does the rest.
+    public static func upserting(key: String, jsonValue: String, in document: String) -> String {
+        let chars = Array(document)
+        var i = 0
+        var depth = 0
+        var inString = false
+        var stringStart = 0
+        var openBrace: Int? = nil
+
+        /// Skip a value starting at `from` (depth 1), returning the index just
+        /// past its last non-whitespace character.
+        func valueEnd(from: Int) -> Int {
+            var j = from
+            var d = 0
+            var s = false
+            var lastContent = from
+            while j < chars.count {
+                let c = chars[j]
+                if s {
+                    lastContent = j + 1
+                    if c == "\\" { j += 2; continue }
+                    if c == "\"" { s = false }
+                    j += 1
+                    continue
+                }
+                if c == "\"" { s = true; lastContent = j + 1; j += 1; continue }
+                if c == "/", j + 1 < chars.count, chars[j + 1] == "/" {
+                    if d == 0 { break }
+                    while j < chars.count, chars[j] != "\n" { j += 1 }
+                    continue
+                }
+                if c == "/", j + 1 < chars.count, chars[j + 1] == "*" {
+                    if d == 0 { break }
+                    j += 2
+                    while j + 1 < chars.count, !(chars[j] == "*" && chars[j + 1] == "/") { j += 1 }
+                    j = min(j + 2, chars.count)
+                    continue
+                }
+                if c == "[" || c == "{" { d += 1 }
+                if c == "]" || c == "}" {
+                    if d == 0 { break }
+                    d -= 1
+                }
+                if c == "," && d == 0 { break }
+                if !c.isWhitespace { lastContent = j + 1 }
+                j += 1
+            }
+            return lastContent
+        }
+
+        while i < chars.count {
+            let c = chars[i]
+            if inString {
+                if c == "\\" { i += 2; continue }
+                if c == "\"" {
+                    inString = false
+                    // A top-level key: "name" followed by a colon.
+                    if depth == 1 {
+                        let name = String(chars[(stringStart + 1)..<i])
+                        var k = i + 1
+                        while k < chars.count, chars[k].isWhitespace { k += 1 }
+                        if k < chars.count, chars[k] == ":", name == key {
+                            var v = k + 1
+                            while v < chars.count, chars[v].isWhitespace { v += 1 }
+                            let end = valueEnd(from: v)
+                            return String(chars[..<v]) + jsonValue + String(chars[end...])
+                        }
+                        // Not our key: skip its value so nested strings are not mistaken for keys.
+                        if k < chars.count, chars[k] == ":" {
+                            var v = k + 1
+                            while v < chars.count, chars[v].isWhitespace { v += 1 }
+                            i = valueEnd(from: v)
+                            continue
+                        }
+                    }
+                }
+                i += 1
+                continue
+            }
+            if c == "\"" { inString = true; stringStart = i; i += 1; continue }
+            if c == "/", i + 1 < chars.count, chars[i + 1] == "/" {
+                while i < chars.count, chars[i] != "\n" { i += 1 }
+                continue
+            }
+            if c == "/", i + 1 < chars.count, chars[i + 1] == "*" {
+                i += 2
+                while i + 1 < chars.count, !(chars[i] == "*" && chars[i + 1] == "/") { i += 1 }
+                i = min(i + 2, chars.count)
+                continue
+            }
+            if c == "{" {
+                depth += 1
+                if depth == 1, openBrace == nil { openBrace = i }
+            }
+            if c == "}" || c == "]" { depth -= 1 }
+            if c == "[" { depth += 1 }
+            i += 1
+        }
+
+        // Key absent: insert right after the top-level opening brace.
+        let line = "\n\t\"\(key)\": \(jsonValue),"
+        if let brace = openBrace {
+            return String(chars[...brace]) + line + String(chars[(brace + 1)...])
+        }
+        return "{" + line + "\n}\n"
+    }
 }

@@ -13,7 +13,6 @@ public enum AgentPolicy {
     public static let commitClassCommands: Set<String> = [
         "file.save",
         "file.saveAs",
-        "file.saveAll",
         "file.revert",
         "file.close",
         "app.quit",
