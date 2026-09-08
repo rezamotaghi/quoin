@@ -126,7 +126,31 @@ final class AgentServer {
                 "path": doc.fileURL.map { .string($0.path) } ?? .null,
                 "dirty": .bool(doc.isDocumentEdited),
                 "can_undo": .bool(doc.undoManager?.canUndo ?? false),
+                "line_count": .int(LineIndex.lineCount(in: text)),
                 "text": .string(text),
+            ]))
+
+        // Line-addressed read (Amendment 2): agents reason in line numbers
+        // and pay per token, so a window of lines beats the whole buffer.
+        case "read_lines":
+            guard let doc = findDocument(path: params["path"]?.stringValue),
+                  let wc = doc.windowControllers.first as? DocumentWindowController else {
+                return AgentResponse(id: request.id, error: "no such open document")
+            }
+            let text = wc.currentText
+            let total = LineIndex.lineCount(in: text)
+            let from = params["from"]?.intValue ?? 1
+            let to = min(params["to"]?.intValue ?? total, total)
+            guard from >= 1, from <= total, to >= from,
+                  let slice = LineIndex.text(ofLines: from, through: to, in: text) else {
+                return AgentResponse(id: request.id, error: "line range out of bounds (this buffer has lines 1...\(total))")
+            }
+            return AgentResponse(id: request.id, result: .object([
+                "path": doc.fileURL.map { .string($0.path) } ?? .null,
+                "from": .int(from),
+                "to": .int(to),
+                "total_lines": .int(total),
+                "text": .string(slice),
             ]))
 
         case "get_selection":
@@ -206,12 +230,36 @@ final class AgentServer {
             }
             return AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
 
+        // Line-addressed write: rewrite lines from...to (1-based, inclusive)
+        // with `text`; the neighbors keep their lines, no trailing newline
+        // needed. Same undo contract as every other write.
+        case "replace_lines":
+            guard let from = params["from"]?.intValue, let to = params["to"]?.intValue,
+                  let text = params["text"]?.stringValue else {
+                return AgentResponse(id: request.id, error: "replace_lines requires params.from, .to, .text")
+            }
+            guard let doc = findDocument(path: params["path"]?.stringValue),
+                  let wc = doc.windowControllers.first as? DocumentWindowController else {
+                return AgentResponse(id: request.id, error: "no such open document")
+            }
+            let total = LineIndex.lineCount(in: wc.currentText)
+            guard let range = LineIndex.contentRange(ofLines: from, through: to, in: wc.currentText),
+                  wc.applyAgentEdit(range: range, text: text) else {
+                return AgentResponse(id: request.id, error: "line range out of bounds (this buffer has lines 1...\(total))")
+            }
+            return AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
+
         case "run_command":
             guard let id = params["id"]?.stringValue else {
                 return AgentResponse(id: request.id, error: "run_command requires params.id")
             }
             guard CommandRegistry.shared.all.contains(where: { $0.id == id }) else {
                 return AgentResponse(id: request.id, error: "unknown command id: \(id)")
+            }
+            // The commit fence (Amendment 2): save, revert, close, and quit
+            // are the human's; the agent proposes in the buffer only.
+            guard AgentPolicy.isAgentRunnable(id) else {
+                return AgentResponse(id: request.id, error: AgentPolicy.refusalMessage(for: id))
             }
             CommandRegistry.shared.run(id)
             return AgentResponse(id: request.id, result: .object(["ok": .bool(true)]))
@@ -222,6 +270,7 @@ final class AgentServer {
                     "id": .string(command.id),
                     "title": .string(command.title),
                     "keybinding": command.defaultKeybinding.map { .string($0) } ?? .null,
+                    "agent_runnable": .bool(AgentPolicy.isAgentRunnable(command.id)),
                 ])
             }
             return AgentResponse(id: request.id, result: .array(commands))

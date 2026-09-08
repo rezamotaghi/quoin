@@ -24,6 +24,20 @@ final class TextDocument: NSDocument {
     /// (hot exit) never mutates the buffer with save-time transforms.
     private var isExplicitSave = false
 
+    override init() {
+        super.init()
+        // Undo groups close explicitly, never "at the end of the event".
+        // AppKit's automatic grouping closes a group only when an EVENT
+        // finishes; while the app sits idle in the background (an agent
+        // editing from a terminal, the usual case) no event ever finishes,
+        // so every agent edit landed in one still-open group and a single
+        // Cmd+Z reverted all of them (verified 2026-09-08 over the socket:
+        // three edits, one undo, empty buffer). The rented view already wraps
+        // each of its own registrations in begin/endUndoGrouping, and agent
+        // edits do the same below, so the groups are exactly the edits.
+        undoManager?.groupsByEvent = false
+    }
+
     override nonisolated class var autosavesInPlace: Bool {
         // hot_exit: autosave-in-place is what lets unsaved work survive
         // quit-and-relaunch without dialogs. AppKit queries this from
@@ -66,6 +80,14 @@ final class TextDocument: NSDocument {
         // there. Registered before the swap; the closure re-registers its
         // own inverse (redo) when it runs, the standard NSUndoManager dance.
         let newRange = range.lowerBound..<(range.lowerBound + (newText as NSString).length)
+        let undoing = undoManager?.isUndoing ?? false
+        let redoing = undoManager?.isRedoing ?? false
+
+        // One agent edit = one undo group, opened and closed right here (the
+        // manager does not group by event, see init). While undoing or
+        // redoing the manager opens the inverse group itself.
+        let ownsGroup = !undoing && !redoing
+        if ownsGroup { undoManager?.beginUndoGrouping() }
         // AppKit runs undo on the main thread; the closure signature is
         // nonisolated, so assert it.
         undoManager?.registerUndo(withTarget: self) { doc in
@@ -76,13 +98,11 @@ final class TextDocument: NSDocument {
         }
         undoManager?.setActionName("AI Edit")
 
-        let undoing = undoManager?.isUndoing ?? false
-        let redoing = undoManager?.isRedoing ?? false
-
         // Suppress STTextView's own undo registration for this swap.
         undoManager?.disableUndoRegistration()
         wc.replaceBufferText(in: range, with: newText)
         undoManager?.enableUndoRegistration()
+        if ownsGroup { undoManager?.endUndoGrouping() }
 
         // NSDocument doesn't auto-count these programmatic edits, so count
         // explicitly and symmetrically: do -> dirtier, undo -> cleaner.

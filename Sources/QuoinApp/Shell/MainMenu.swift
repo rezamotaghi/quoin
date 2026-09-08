@@ -51,6 +51,7 @@ enum MainMenu {
         // unbound, the system block keeps Duplicate=cmd+shift+s and this
         // stays the one visible Save As.
         .item(Item("file.saveAs", "File: Save As", "Save As…", nil, "saveDocumentAsExplicit:")),
+        .item(Item("file.saveAll", "File: Save All", "Save All", "cmd+alt+s", "saveAllDocuments:")),
         .separator,
         .submenu("Export", [
             .item(Item("file.exportMarkdown", "File: Export as Markdown", "Markdown (.md)…", nil,
