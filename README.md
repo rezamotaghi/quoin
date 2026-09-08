@@ -27,8 +27,10 @@ nothing touches disk until you press Cmd+S: the agent proposes, you dispose.
 
 Beyond the agent surface, it is a Sublime-class editor: native tabs,
 tree-sitter highlighting, Goto Anything, command palette, split panes,
-multi-cursor, hot exit. Swift + AppKit, pure SwiftPM, macOS 14+, no
-Xcode.app required.
+multi-cursor, hot exit, and Sublime's menu vocabulary (line, comment, case,
+sort and permute commands, selection tools, syntax and indentation
+switches), every item of which is also an agent verb. Swift + AppKit, pure
+SwiftPM, macOS 14+, no Xcode.app required.
 
 ## Why there's no AI inside
 
@@ -45,7 +47,7 @@ medical imaging. Both at [rezamotaghi.com](https://rezamotaghi.com).
 ## Quickstart
 
 ```bash
-swift test               # 79 unit tests
+swift test               # 109 unit tests
 Scripts/bundle-app.sh    # -> build/Quoin.app
 open build/Quoin.app
 ```
@@ -62,16 +64,35 @@ by construction). The bundled shim exposes that socket as an MCP server:
 claude mcp add quoin -- "$(pwd)/build/Quoin.app/Contents/MacOS/QuoinMCP"
 ```
 
-Read tools: `quoin_list_open_documents`, `quoin_read_buffer` (live
-buffer, including unsaved edits), `quoin_get_selection`,
-`quoin_open_file` (path + line), `quoin_list_commands`,
-`quoin_run_command`. Write tools: `quoin_replace_selection`,
-`quoin_apply_edit` (offset range), `quoin_set_text`.
+The same line is under Agent > Copy MCP Setup Command in the app. For Claude
+Desktop, each release carries `quoin-<version>.mcpb`, a one-click MCP Bundle
+of the shim (Apple silicon).
 
-Each write is registered as its own inverse on the document's undo manager, so
-Cmd+Z peels agent edits off one at a time, back to a pristine buffer. Edits
-mark the document dirty like typing does; the file on disk changes only when
-you save. Turn the whole surface off with `"agent_server": false` in settings.
+Eleven verbs, each self-describing (annotations and an output schema):
+
+- Read: `quoin_list_open_documents`, `quoin_read_buffer` (the live buffer,
+  unsaved edits included), `quoin_read_lines` (a window of lines),
+  `quoin_get_selection`, `quoin_list_commands`.
+- Act: `quoin_open_file` (path and line), `quoin_run_command` (any menu
+  command by id).
+- Write: `quoin_replace_selection`, `quoin_replace_lines`, `quoin_apply_edit`
+  (offset range), `quoin_set_text` (whole buffer).
+
+Each write is one step on the normal undo stack, so Cmd+Z peels agent edits
+off one at a time, back to a pristine buffer, whether or not you were at the
+keyboard. Edits mark the document dirty like typing does; the file on disk
+changes only when you save. The commit fence makes that a mechanism rather
+than a sentence: `save`, `save as`, `revert`, `close`, and `quit` are
+refused over the agent surface, so the only save button is yours.
+
+Beyond verbs: the open buffers are MCP resources (`quoin://buffer`,
+`quoin://buffer/<absolute path>`, `quoin://selection`, `quoin://documents`),
+and a host can subscribe to a buffer and be told the moment it changes
+instead of polling. Three prompts package the choreographies
+(`proofread-selection`, `review-buffer`, `undo-tour`), and
+[skills/quoin-editing/SKILL.md](skills/quoin-editing/SKILL.md) teaches any
+host the verbs and the contract. Turn the whole surface off with
+`"agent_server": false` in settings, or in the Agent menu.
 
 ## Open files from a terminal
 
@@ -104,12 +125,23 @@ Cmd+Shift+M. Both are the real app, captured over its own MCP surface.*
 | Escape | Collapse to one caret |
 | Cmd+Alt+2 | Toggle split editor (two views, one buffer) |
 | Cmd+F | Find; Cmd+Alt+F find and replace |
+| Cmd+Shift+D / Ctrl+Shift+K | Duplicate / delete line; Ctrl+Cmd+Up/Down swap lines |
+| Cmd+/ | Toggle comment (per-language token) |
+| Cmd+Shift+L | Split selection into lines; Ctrl+Shift+Up/Down add a caret on the previous / next line |
+| Ctrl+G | Goto line |
 | Cmd+Shift+M | Markdown preview |
 | Cmd+Shift+[ / ] | Previous / next tab |
+| Cmd+, | Settings (your settings.jsonc, in the editor) |
 
-Tree-sitter highlighting ships for Swift, Python, JSON, and Markdown; JSONC
-uses a hand-rolled lexer, and other file types open unhighlighted as plain
-text. Hot exit is on by default: quit and
+Ten menus carry Sublime's vocabulary: Edit > Line, Comment, Convert Case,
+Sort Lines, Permute Lines; Selection; Find; View > Word Wrap, Line Numbers,
+Whitespace, Syntax, Indentation, Font, Theme; Goto; and an Agent menu (status,
+the setup command, the server switch, Undo Last Agent Edit). Every item is
+also a palette command and an agent verb; the View toggles write your
+settings file in place, comments kept. Tree-sitter highlighting ships for
+Swift, Python, JSON, and Markdown; JSONC uses a hand-rolled lexer, and other
+file types open unhighlighted as plain text (View > Syntax overrides per
+document). Hot exit is on by default: quit and
 relaunch restores every tab, including unsaved buffers (graceful quit; a
 force-kill loses them). If anything rewrites a file you have unsaved edits in,
 a banner offers Reload From Disk / Keep My Edits.

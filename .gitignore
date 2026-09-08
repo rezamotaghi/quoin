@@ -6,3 +6,7 @@ DerivedData/
 xcuserdata/
 *.xcodeproj
 .claude/
+
+# MCP bundle staging + output (Scripts/make-mcpb.sh); the bundle ships as a release asset
+/.mcpb/
+/dist/

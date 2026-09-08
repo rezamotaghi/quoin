@@ -10,7 +10,7 @@ Pure SwiftPM, macOS 14+, Command Line Tools are enough (no Xcode.app needed):
 
 ```bash
 swift build              # compile everything
-swift test               # 79 unit tests, must be green
+swift test               # 109 unit tests, must be green
 Scripts/bundle-app.sh    # wrap the release binary into build/Quoin.app
 ```
 
@@ -19,6 +19,10 @@ Scripts/bundle-app.sh    # wrap the release binary into build/Quoin.app
 refreshes it automatically, so the installed app never falls behind the
 repo; `--no-install` skips the refresh. It never touches /Applications
 on a machine where Quoin was not installed.
+
+The agent surface has a second gate: with the fresh bundle running,
+`Scripts/mcp-smoke.py --subscribe` walks every verb, resource, and prompt
+over stdio the way a host does and stops on the first wrong answer.
 
 Tests use Swift Testing (`import Testing`, `@Test`, `#expect`), not XCTest.
 Add tests in the same style next to the ones that already cover the module
@@ -62,14 +66,17 @@ you are touching.
 
 ## The agent surface is a public contract
 
-The nine `quoin_*` MCP verbs (`quoin_list_open_documents`,
-`quoin_read_buffer`, `quoin_get_selection`, `quoin_open_file`,
-`quoin_list_commands`, `quoin_run_command`, `quoin_replace_selection`,
-`quoin_apply_edit`, `quoin_set_text`) are what external agents are built
-against. Treat them like a published API: names, parameters, and semantics
-stay stable. A breaking change to any of them needs a strong reason, an
-issue where it is agreed, and a major version bump. Additive verbs are fine;
-silent behavior changes are not.
+The eleven `quoin_*` MCP verbs (`quoin_list_open_documents`,
+`quoin_read_buffer`, `quoin_read_lines`, `quoin_get_selection`,
+`quoin_open_file`, `quoin_list_commands`, `quoin_run_command`,
+`quoin_replace_selection`, `quoin_replace_lines`, `quoin_apply_edit`,
+`quoin_set_text`), the `quoin://` resources, and the three prompts are what
+external agents are built against. Treat them like a published API: names,
+parameters, and semantics stay stable. A breaking change to any of them
+needs a strong reason, an issue where it is agreed, and a major version
+bump. Additive verbs are fine; silent behavior changes are not. The commit
+fence (`AgentPolicy.commitClassCommands`) is part of the contract too: the
+agent never saves, reverts, closes, or quits.
 
 ## Reporting bugs and proposing features
 

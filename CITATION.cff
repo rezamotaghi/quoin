@@ -8,8 +8,8 @@ authors:
     orcid: "https://orcid.org/0009-0005-3194-1879"
     website: "https://rezamotaghi.com"
 repository-code: "https://github.com/rezamotaghi/quoin"
-version: 1.0.0
-date-released: 2026-07-18
+version: 1.1.0
+date-released: 2026-09-08
 license: MIT
 keywords:
   - text editor

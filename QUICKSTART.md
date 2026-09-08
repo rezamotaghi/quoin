@@ -9,7 +9,7 @@ and press Cmd+Shift+M right now to read it with the rendered preview.
 
 ```bash
 cd path/to/quoin
-swift test               # 79 unit tests, should be green
+swift test               # 109 unit tests, should be green
 Scripts/bundle-app.sh    # produces build/Quoin.app
 open build/Quoin.app
 ```
@@ -69,10 +69,24 @@ exactly like Sublime.
 | Cmd+C with nothing selected | Copies the whole line (Sublime habit, on by default) |
 | Cmd+Shift+P | Command palette: every menu action, fuzzy-searchable |
 | Cmd+Shift+[ / ] | Previous / next tab |
+| Cmd+] / Cmd+[ | Indent / unindent the selected lines |
+| Ctrl+Cmd+Up / Down | Swap the line (or selected lines) with its neighbor |
+| Cmd+Shift+D / Ctrl+Shift+K / Cmd+Shift+J | Duplicate / delete / join lines |
+| Cmd+/ | Toggle comment, with the language's own token |
+| F5 | Sort lines (the selection, or the whole buffer); Edit > Permute Lines reverses, dedupes, shuffles |
+| Cmd+Shift+L | Split the selection into one selection per line |
+| Ctrl+Shift+Up / Down | Add a caret on the previous / next line |
+| Ctrl+G | Goto line |
+| Cmd+, | Your settings file, in the editor |
 
 Syntax highlighting is tree-sitter based and covers Swift, Python, JSON,
-and Markdown; JSONC uses a dedicated lexer. Indentation style (tabs vs
-spaces) is sniffed per file on open.
+and Markdown; JSONC uses a dedicated lexer. View > Syntax overrides the
+language for one document (an untitled buffer, a file with an odd
+extension). Indentation style (tabs vs spaces) is sniffed per file on open;
+View > Indentation overrides it. Word Wrap, Line Numbers, Whitespace, Font
+size and Theme live in the View menu too; each one writes your settings
+file in place (comments kept) and applies live, so the file stays the
+source of truth.
 
 ## 5. Appearance
 
@@ -101,39 +115,60 @@ The editor is built to work WITH an agent running in a terminal beside it.
 buffers reload silently. If you have unsaved edits in a file the agent
 rewrote, a banner appears under the title bar with the only honest
 options: Reload From Disk or Keep My Edits. Nothing is ever merged or
-discarded silently. Optional: set `"follow_agent_edits": true` and the
-tab an agent just touched comes to the front by itself.
+discarded silently. Optional: set `"follow_agent_edits": true` (or Agent >
+Follow Agent Edits) and the tab an agent just touched comes to the front by
+itself.
 
 **The active surface needs one command.** Register the bundled MCP shim
-with Claude Code:
+with Claude Code (Agent > Copy MCP Setup Command puts this on the clipboard
+with the installed app's own path):
 
 ```bash
 claude mcp add quoin -- "$(pwd)/build/Quoin.app/Contents/MacOS/QuoinMCP"
 ```
 
+Claude Desktop users open the `quoin-<version>.mcpb` bundle from the release
+page instead (Apple silicon; the app itself still runs from here).
+
 After that, an agent can genuinely share your view of the work, and edit it:
 
 - `quoin_list_open_documents`: what is open, what is dirty, what is front
 - `quoin_read_buffer`: the LIVE text, including unsaved edits
+- `quoin_read_lines`: a window of lines, 1-based, with the total line count
 - `quoin_get_selection`: where your cursor is, what you selected
 - `quoin_open_file`: open a file at a line, for you
-- `quoin_run_command` / `quoin_list_commands`: the whole command catalog
+- `quoin_run_command` / `quoin_list_commands`: the whole menu, by command id
 - `quoin_replace_selection`: rewrite what you have highlighted
+- `quoin_replace_lines`: rewrite lines from..to, neighbors untouched
 - `quoin_apply_edit`: replace an explicit offset range
 - `quoin_set_text`: replace the whole document (a full proofread pass)
 
 Every write lands in the buffer as ONE undoable edit, left selected so you
 see it, and nothing reaches disk until you save. The agent proposes, your
-Cmd+S disposes; one Cmd+Z reverts any agent edit cleanly.
+Cmd+S disposes; one Cmd+Z reverts any agent edit cleanly, whether you were
+typing or away. The commit fence keeps it that way: `save`, `save as`,
+`revert`, `close`, and `quit` are refused over the agent surface. The
+title bar shows a small count of agent edits in a window from the first
+one on, and Agent > Undo Last Agent Edit reverts the newest one only when
+it is an agent's.
+
+The same state is readable as MCP resources (`quoin://buffer` for the front
+document, `quoin://buffer/<absolute path>`, `quoin://selection`,
+`quoin://documents`), and a host that subscribes to a buffer is told the
+moment it changes. Three prompts package the choreographies:
+`proofread-selection`, `review-buffer`, `undo-tour`; in Claude Code they
+appear as slash commands. `skills/quoin-editing/SKILL.md` teaches any host
+the verbs and the contract.
 
 Try it: select a sentence with a typo, ask Claude to "fix the grammar in my
 selection in Quoin," watch the fix appear, then Cmd+Z to confirm it
-reverts in one step.
+reverts in one step. Or run the `undo-tour` prompt.
 
 Everything is local only: a unix socket at
 `~/Library/Application Support/Quoin/agent.sock`, protected by file
 permissions, no network listener. Kill switch: `"agent_server": false` in
-settings (applies live).
+settings or Agent > Agent Server (applies live). Agent > Agent Status shows
+the socket, the switch, and the edit count.
 
 ## 8. Troubleshooting
 
@@ -156,5 +191,8 @@ settings (applies live).
 | Color schemes | `Settings/schemes/*.jsonc` |
 | Agent socket | `~/Library/Application Support/Quoin/agent.sock` |
 | MCP shim | `Quoin.app/Contents/MacOS/QuoinMCP` |
+| MCP bundle for Claude Desktop | `Scripts/make-mcpb.sh` writes `dist/quoin-<version>.mcpb` |
+| Agent Skill | `skills/quoin-editing/SKILL.md` |
+| Live surface check | `Scripts/mcp-smoke.py --subscribe` (with the app running) |
 | CLI opener | `Scripts/quoin` (symlink it onto your PATH) |
 | Architecture and decisions | `ARCHITECTURE.md`, `AGENTS.md` in the repo |

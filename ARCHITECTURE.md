@@ -157,7 +157,10 @@ disk changes only when the user saves. The agent proposes, Cmd+S disposes.
 **Invariant 6 (new):** the agent surface reads and acts only through the
 same public seams as the UI (NSDocumentController, CommandRegistry,
 EditorViewPort/SelectionSet). No privileged backdoor; a capability an agent
-needs is a capability the UI gets too, or neither.
+needs is a capability the UI gets too, or neither. *Refined by Amendment
+2:* the one asymmetry runs the other way and is deliberate: commit rights
+(save, save as, revert, close, quit) are the human's alone, and the agent
+surface refuses them.
 
 **Security posture:** local-only by construction. A unix socket is a
 file-permission-protected channel on this machine; there is no network
@@ -168,3 +171,42 @@ agent panel with diff review, permission prompts, checkpoints). That is
 Zed/Cursor's hardest product surface, there is no Swift ACP SDK, and the
 terminal agent + this editor side-by-side already covers the workflow. If
 this ever changes it is a new amendment, not a drift.
+
+## Amendment 2 (2026-09-08): The agent-native release
+
+Adopted after a survey of what editors expose to agents in 2026 (Zed's
+ACP, JetBrains' and Xcode's built-in MCP servers, VS Code's tool set, the
+Neovim, Emacs, and Sublime servers) and of the MCP primitives beyond tools.
+Everything above STANDS: the stack table, invariants 1 through 6 (6 refined,
+not reversed), the module layout, the rental, and the decision not to host
+an agent panel. This amendment is additive; the sibling instrument shipped
+the same shape the same day.
+
+**Principle sharpened:** the surface must make the contract mechanical and
+visible, not merely stated. "The human has the only save button" becomes a
+fence the endpoint enforces; "one edit, one undo step" becomes a guarantee
+that holds whether or not the human is at the keyboard; and the host is
+told when the buffer changes rather than left to poll.
+
+**What changes (all additive):**
+
+| Piece | What it is |
+|---|---|
+| `EditorCore/AgentPolicy.swift` | The commit fence: `file.save`, `file.saveAs`, `file.revert`, `file.close`, `app.quit` are refused by `run_command` and flagged in `list_commands`. Pure data, pinned by a test. |
+| `EditorCore/LineOperations.swift` | `LineIndex` (1-based line arithmetic over UTF-16), `LineOperations` and `SelectionOperations` (Sublime's line, comment, case, permute, and selection commands as pure functions returning one `LineEdit`). |
+| `read_lines`, `replace_lines` | Line-addressed verbs; content-only ranges so a replacement needs no trailing newline. |
+| `EditorCore/AgentProtocol.swift` `AgentEvent` | A server-initiated line (no `id`) on a connection that sent `subscribe`: `buffer_changed` after the editor's 150 ms debounce, for typing, agent edits, and reloads. |
+| `QuoinMCP` | Self-describing: annotations and output schemas on every tool, `structuredContent`, resources (`quoin://documents`, `quoin://buffer`, `quoin://selection`, `{+path}` templates), `resources/subscribe` over one persistent socket connection (`EventStream`), three prompts. Version 1.1.0, still the only target that links the MCP SDK. |
+| `TextDocument` undo grouping | `groupsByEvent = false`; each agent edit opens and closes its own group. AppKit's automatic group closes only when an event finishes, which never happens while the app idles in the background, so N agent edits used to collapse into one Cmd+Z. |
+| `MainMenu` | Ten menus in Sublime's vocabulary, over a hundred commands, every one a palette entry and an agent verb. AppKit's automatic items are left to AppKit. View toggles write the user's settings file through `JSONC.upserting` (comments kept) and hot-reload. |
+| Agent menu, title-bar chip | Status, the setup command, the two switches, Undo Last Agent Edit (only when the newest undo is an agent's); a chip counts agent edits in a window. |
+| `Scripts/mcp-smoke.py` | The live gate: initializes the shim over stdio like a host, walks tools, resources, prompts, the fence, an edit-and-undo round trip in an Untitled buffer, the menu commands via `run_command`, and the push notification. |
+| `Scripts/make-mcpb.sh`, `mcpb/manifest.json`, `skills/quoin-editing/SKILL.md` | Distribution: a binary MCP Bundle for Claude Desktop and an Agent Skill. |
+
+**Deliberately NOT built (rationale recorded):** diagnostics, a terminal,
+project-wide search, build and run, refactoring (the IDE surface; they
+dilute the instrument and ARCHITECTURE already rejected the agent panel);
+elicitation dialogs (the undo stack and Cmd+S are the human-decides
+mechanism; a dialog in the terminal would weaken it); sampling, roots, and
+logging (deprecated in the 2026-07-28 MCP revision); code folding and the
+minimap (unchanged). If any of these ever lands it is a new amendment.

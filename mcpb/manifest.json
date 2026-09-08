@@ -1,0 +1,58 @@
+{
+  "manifest_version": "0.3",
+  "name": "quoin",
+  "display_name": "Quoin",
+  "version": "__VERSION__",
+  "description": "Read and edit the live buffers of the Quoin macOS editor. Every agent edit is one undo step; nothing reaches disk until the human saves.",
+  "long_description": "Quoin is a macOS text editor where AI agents are first-class users. This bundle connects Claude Desktop to a Quoin.app already running on this Mac (Apple silicon): the agent can list the open documents, read a live buffer (unsaved edits included) or a window of its lines, see the selection, open a file at a line, run any menu command, and edit a buffer by selection, by line range, by offset range, or whole. Each write lands as one undo step, left selected, so one Cmd+Z reverts it; save, save as, revert, close, and quit are refused, so the only save button stays yours. Install and launch Quoin first: https://github.com/rezamotaghi/quoin",
+  "author": {
+    "name": "Dr. Reza Motaghi",
+    "url": "https://rezamotaghi.com"
+  },
+  "homepage": "https://github.com/rezamotaghi/quoin",
+  "documentation": "https://github.com/rezamotaghi/quoin/blob/main/QUICKSTART.md",
+  "license": "MIT",
+  "keywords": ["text editor", "macOS", "Sublime Text", "AI agents", "undo", "buffer"],
+  "server": {
+    "type": "binary",
+    "entry_point": "QuoinMCP",
+    "mcp_config": {
+      "command": "${__dirname}/QuoinMCP",
+      "args": []
+    }
+  },
+  "tools": [
+    { "name": "quoin_list_open_documents", "description": "List the documents open in Quoin: path, display name, dirty flag, and which is frontmost." },
+    { "name": "quoin_read_buffer", "description": "Read the live buffer of an open document, unsaved edits included, with its line count." },
+    { "name": "quoin_read_lines", "description": "Read lines from..to (1-based, inclusive) of an open document's live buffer, plus its total line count." },
+    { "name": "quoin_get_selection", "description": "Get the selections (UTF-16 offsets) and the primary selection's text of an open document." },
+    { "name": "quoin_open_file", "description": "Open a file in Quoin, optionally at a 1-based line." },
+    { "name": "quoin_replace_selection", "description": "Replace the user's selection with new text, as one undoable buffer edit." },
+    { "name": "quoin_replace_lines", "description": "Rewrite lines from..to with new text, neighbors untouched, as one undoable buffer edit." },
+    { "name": "quoin_apply_edit", "description": "Replace an explicit UTF-16 offset range with new text, as one undoable buffer edit." },
+    { "name": "quoin_set_text", "description": "Replace an open document's entire buffer, as one undoable buffer edit." },
+    { "name": "quoin_run_command", "description": "Run a Quoin menu command by id; save, revert, close, and quit are refused." },
+    { "name": "quoin_list_commands", "description": "List every command Quoin can run, with ids, keybindings, and whether an agent may run it." }
+  ],
+  "prompts": [
+    {
+      "name": "proofread-selection",
+      "description": "Fix grammar, spelling, and clarity in the text the user has selected in Quoin, in place, as one undoable edit.",
+      "text": "The user has selected text in Quoin. Call quoin_get_selection; if it is empty, ask them to select the passage first. Correct grammar, spelling, punctuation, and clarity only, keeping meaning, voice, and line breaks. Apply it with quoin_replace_selection (one undoable edit, left selected, unsaved). Tell the user what changed and that one Cmd+Z reverts it. Never try to save."
+    },
+    {
+      "name": "review-buffer",
+      "description": "Read the frontmost buffer and report issues by line number, proposing edits without applying them.",
+      "arguments": ["focus"],
+      "text": "Review the document the user has in front of them in Quoin. Focus: ${arguments.focus}. Call quoin_list_open_documents, then quoin_read_buffer (or quoin_read_lines in windows) for the live text. Report findings as a short list with line numbers and a one-line fix each, most important first. Apply nothing unless asked; then use quoin_replace_lines for that finding only and remind the user it is one undoable, unsaved edit."
+    },
+    {
+      "name": "undo-tour",
+      "description": "A one-minute demonstration: apply a small edit to the front document, then walk the user through undoing it in one step.",
+      "text": "Demonstrate Quoin's contract: the agent proposes, the human disposes. Note whether the front document is dirty (quoin_list_open_documents), read lines 1 to 5 (quoin_read_lines), make one small reversible edit on line 1 with quoin_replace_lines and say exactly what changed. Ask the user to press Cmd+Z once, then confirm with quoin_read_buffer that the text is back and, if the buffer was clean before, that it is clean again. Disk was never touched."
+    }
+  ],
+  "compatibility": {
+    "platforms": ["darwin"]
+  }
+}
