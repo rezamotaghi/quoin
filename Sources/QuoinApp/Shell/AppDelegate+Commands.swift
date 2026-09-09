@@ -16,6 +16,14 @@ extension AppDelegate: NSUserInterfaceValidations {
 
     // MARK: Quoin
 
+    /// Quoin > About: the standard panel, with an empty build string so it
+    /// reads "Version 1.1.0" and not "Version 1.1.0 (1.1.0)". AppKit prints
+    /// CFBundleVersion in parentheses whenever it is non-empty, equal to the
+    /// marketing version or not (checked on the live panel 2026-09-09).
+    @objc func showAbout(_ sender: Any?) {
+        NSApp.orderFrontStandardAboutPanel(options: [.version: ""])
+    }
+
     /// Quoin > Settings: the user's settings.jsonc, in the editor itself.
     @objc func openSettings(_ sender: Any?) {
         NSDocumentController.shared.openDocument(withContentsOf: SettingsStore.shared.userFileURL, display: true) { _, _, _ in }

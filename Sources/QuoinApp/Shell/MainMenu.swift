@@ -45,7 +45,7 @@ enum MainMenu {
     }
 
     private static let appMenu: [Entry] = [
-        .item(Item("app.about", "Quoin: About", "About Quoin", nil, "orderFrontStandardAboutPanel:")),
+        .item(Item("app.about", "Quoin: About", "About Quoin", nil, "showAbout:")),
         .separator,
         .item(Item("app.settings", "Quoin: Settings", "Settings…", "cmd+,", "openSettings:")),
         .separator,
