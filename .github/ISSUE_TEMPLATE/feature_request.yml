@@ -8,7 +8,7 @@ body:
         Quoin is deliberately small. The strongest requests name a real
         problem first; the solution can be argued about afterwards. Read
         ARCHITECTURE.md before proposing anything that touches the frozen
-        decisions or the nine quoin_* MCP verbs.
+        decisions or the eleven quoin_* MCP verbs.
   - type: textarea
     id: problem
     attributes:

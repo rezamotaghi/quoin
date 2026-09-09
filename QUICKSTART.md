@@ -152,8 +152,9 @@ title bar shows a small count of agent edits in a window from the first
 one on, and Agent > Undo Last Agent Edit reverts the newest one only when
 it is an agent's.
 
-The same state is readable as MCP resources (`quoin://buffer` for the front
-document, `quoin://buffer/<absolute path>`, `quoin://selection`,
+The same state is readable as MCP resources (`quoin://buffer` and
+`quoin://selection` for the front document, `quoin://buffer/<absolute path>`
+and `quoin://selection/<absolute path>` for any open file,
 `quoin://documents`), and a host that subscribes to a buffer is told the
 moment it changes. Three prompts package the choreographies:
 `proofread-selection`, `review-buffer`, `undo-tour`; in Claude Code they

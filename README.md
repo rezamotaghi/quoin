@@ -85,10 +85,11 @@ changes only when you save. The commit fence makes that a mechanism rather
 than a sentence: `save`, `save as`, `revert`, `close`, and `quit` are
 refused over the agent surface, so the only save button is yours.
 
-Beyond verbs: the open buffers are MCP resources (`quoin://buffer`,
-`quoin://buffer/<absolute path>`, `quoin://selection`, `quoin://documents`),
-and a host can subscribe to a buffer and be told the moment it changes
-instead of polling. Three prompts package the choreographies
+Beyond verbs: the open buffers are MCP resources (`quoin://buffer` and
+`quoin://selection` for the front document, `quoin://buffer/<absolute path>`
+and `quoin://selection/<absolute path>` for any open file,
+`quoin://documents`), and a host can subscribe to a buffer and be told the
+moment it changes instead of polling. Three prompts package the choreographies
 (`proofread-selection`, `review-buffer`, `undo-tour`), and
 [skills/quoin-editing/SKILL.md](skills/quoin-editing/SKILL.md) teaches any
 host the verbs and the contract. Turn the whole surface off with

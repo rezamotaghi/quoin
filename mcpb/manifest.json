@@ -31,7 +31,7 @@
     { "name": "quoin_replace_lines", "description": "Rewrite lines from..to with new text, neighbors untouched, as one undoable buffer edit." },
     { "name": "quoin_apply_edit", "description": "Replace an explicit UTF-16 offset range with new text, as one undoable buffer edit." },
     { "name": "quoin_set_text", "description": "Replace an open document's entire buffer, as one undoable buffer edit." },
-    { "name": "quoin_run_command", "description": "Run a Quoin menu command by id; save, revert, close, and quit are refused." },
+    { "name": "quoin_run_command", "description": "Run a Quoin menu command by id; save, save as, revert, close, and quit are refused." },
     { "name": "quoin_list_commands", "description": "List every command Quoin can run, with ids, keybindings, and whether an agent may run it." }
   ],
   "prompts": [

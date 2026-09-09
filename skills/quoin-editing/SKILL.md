@@ -62,7 +62,8 @@ returns them.
 
 Hosts that attach context instead of calling tools can read
 `quoin://documents`, `quoin://buffer` (front document), `quoin://selection`,
-and `quoin://buffer/<absolute path>`. A host may subscribe to a buffer
+and `quoin://buffer/<absolute path>` or `quoin://selection/<absolute path>`
+for any open file. A host may subscribe to a buffer
 resource and is then told on every change; a subscription never polls.
 
 Three prompts package the choreographies: `proofread-selection` (fix the
@@ -91,7 +92,7 @@ back).
 
 ## Do not
 
-- Do not save, revert, close, or quit; the verbs refuse and the human would
+- Do not save, save as, revert, close, or quit; the verbs refuse and the human would
   not thank you for trying.
 - Do not edit a file on disk that is open in Quoin: the editor will show a
   conflict banner if the buffer has unsaved edits. Edit the buffer instead.

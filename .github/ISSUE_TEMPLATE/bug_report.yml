@@ -19,7 +19,7 @@ body:
     attributes:
       label: Quoin version
       description: From Quoin > About Quoin, or the git commit if you built from source.
-      placeholder: "e.g. 1.0.0"
+      placeholder: "e.g. 1.1.0"
     validations:
       required: true
   - type: dropdown

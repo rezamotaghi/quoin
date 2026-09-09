@@ -76,7 +76,7 @@ parameters, and semantics stay stable. A breaking change to any of them
 needs a strong reason, an issue where it is agreed, and a major version
 bump. Additive verbs are fine; silent behavior changes are not. The commit
 fence (`AgentPolicy.commitClassCommands`) is part of the contract too: the
-agent never saves, reverts, closes, or quits.
+agent never saves, saves as, reverts, closes, or quits.
 
 ## Reporting bugs and proposing features
 

@@ -8,6 +8,8 @@ through the surface, leaving it empty and clean (closing is the human's).
 
     Scripts/mcp-smoke.py                 # read-only checks against the running app
     Scripts/mcp-smoke.py --edit          # plus the write and undo round trip
+    Scripts/mcp-smoke.py --subscribe     # plus the buffer-change push (implies --edit)
+    Scripts/mcp-smoke.py --version 1.1.0 # the version the shim must report
     Scripts/mcp-smoke.py --shim PATH     # a shim other than build/Quoin.app's
 
 Exit status is non-zero on the first failure; the gate reads it.
