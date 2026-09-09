@@ -43,8 +43,9 @@ A version bump is a short checklist, all in the same commit:
 
 1. `CITATION.cff` `version:` and `date-released:` (the day the release can first
    exist);
-2. `Resources/Info.plist` `CFBundleShortVersionString` (same string) and
-   `CFBundleVersion` (increment);
+2. `Resources/Info.plist` `CFBundleShortVersionString` and `CFBundleVersion`,
+   both the same string (when they differ, the About panel shows the build
+   number in parentheses; Reza wants one number);
 3. `Sources/QuoinMCP/main.swift`, the `Server(... version:)` string;
 4. `CHANGELOG.md`: a dated section plus its tag link at the bottom.
 
