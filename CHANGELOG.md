@@ -9,7 +9,7 @@ is a major version bump.
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-09-08
+## [1.1.0] - 2026-09-09
 
 The agent-native release: the surface describes itself, pushes buffer
 changes to the host, and refuses the commit-class commands; the menu grows
