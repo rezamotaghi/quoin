@@ -22,6 +22,11 @@ is a major version bump.
   a symlink the new engine cannot repoint and that could hand back a stale
   binary. The install step replaces `/Applications/Quoin.app` instead of
   merging into it, and verifies the code signature's seal afterwards.
+- The editor pane is one color for any document length. The rented text
+  view sizes itself to the text and its scroll view drew no background, so
+  below a short file the window's gray showed instead of the scheme's
+  background. The scroll view now paints the scheme background too, in both
+  schemes, in split panes, and beside the Markdown preview.
 
 ### Added
 

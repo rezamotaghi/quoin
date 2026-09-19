@@ -248,7 +248,15 @@ final class STTextViewPort: NSObject, EditorPane {
     /// Scheme chrome. Colors come from the active scheme file's "globals";
     /// nil roles keep the system defaults.
     func applyColors(_ colors: PaneColors) {
-        textView.backgroundColor = colors.background ?? .textBackgroundColor
+        let background = colors.background ?? .textBackgroundColor
+        textView.backgroundColor = background
+        // The rented view sizes its frame to the text, not to the pane, and
+        // its scroll view ships with drawsBackground off: below a short
+        // document the window's own gray showed through. Paint the scroll
+        // view too, so the pane is one color whatever the document's length
+        // (and in the rubber-band margins of a long one).
+        scrollView.drawsBackground = true
+        scrollView.backgroundColor = background
         textView.textColor = colors.foreground ?? .textColor
         textView.insertionPointColor = colors.caret ?? .textInsertionPointColor
         if let lineHighlight = colors.lineHighlight {
