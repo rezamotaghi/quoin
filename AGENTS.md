@@ -12,7 +12,10 @@ first-class too: read this file and ARCHITECTURE.md before writing code.
   a from-scratch reframe.
 - **Verify with this repo's gates before claiming done:**
   ```bash
-  swift build && swift test        # must be green
+  Scripts/test.sh                  # swift build && swift test, must be
+                                   # green; the wrapper names the Swift
+                                   # Testing macro plugin the 6.4 Command
+                                   # Line Tools fail to find on their own
   Scripts/bundle-app.sh            # must produce build/Quoin.app; also
                                    # refreshes /Applications/Quoin.app when
                                    # one is installed (never leave the
@@ -96,6 +99,31 @@ requires Xcode. Tests use **Swift Testing** (`import Testing`, `@Test`,
 - **AppKit hides a Save All item under autosave-in-place** (as it does in
   TextEdit); a `saveAllDocuments:` item registers a command nobody can see.
   None is declared.
+- **Plain `swift test` is red on the Swift 6.4 Command Line Tools** (macOS
+  27, installed 2026-09-16): test targets compile without the path to
+  libTestingMacros and every `@Test` fails with "plugin for module
+  'TestingMacros' not found". A three-line package reproduces it, so it is
+  the toolchain. `--build-system native` is worse (no `Testing` module at
+  all) and deprecated. `Scripts/test.sh` derives the plugin folder from the
+  active toolchain and passes it to build and test alike; use it, not the
+  bare commands. CI stays on the bare commands: Xcode's toolchain finds the
+  plugin, and the wrapper could not be proven there before a push.
+- **A grammar bundle has two shapes.** The native build system wrote a flat
+  folder (`queries/highlights.scm` at the root); the Swift Build engine,
+  default from Swift 6.4, writes a real macOS bundle
+  (`Contents/Resources/queries/`). `GrammarQueries` looks for both and
+  `GrammarQueriesTests` pins both; a lookup that knew only the flat shape
+  lost every grammar its highlighting the day the toolchain changed.
+- **Never read `.build/release`.** The Swift Build engine writes products
+  to `.build/out/Products/Release` and cannot repoint a symlink the native
+  build system left behind, so the old path held a stale binary and stale
+  bundles that copied without complaint: a fresh-looking app made of old
+  code. The scripts ask `swift build --show-bin-path`.
+- **Install by replacing, never by merging.** `ditto` onto an existing
+  `/Applications/Quoin.app` keeps every file the new build dropped; the
+  leftover flat `queries/` folders broke the signature's seal and were read
+  in preference to the new ones. `bundle-app.sh` stages, swaps, and then
+  runs `codesign --verify --deep --strict` on the installed copy.
 - **The smoke test leaves an empty Untitled tab behind on purpose.** Closing
   is a commit-class command the fence refuses, so the scratch buffer is an
   Untitled one that two undos leave empty and clean.

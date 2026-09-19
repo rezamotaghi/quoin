@@ -9,7 +9,7 @@ and press Cmd+Shift+M right now to read it with the rendered preview.
 
 ```bash
 cd path/to/quoin
-swift test               # 109 unit tests, should be green
+Scripts/test.sh          # build + 113 unit tests, should be green
 Scripts/bundle-app.sh    # produces build/Quoin.app
 open build/Quoin.app
 ```

@@ -47,7 +47,7 @@ medical imaging. Both at [rezamotaghi.com](https://rezamotaghi.com).
 ## Quickstart
 
 ```bash
-swift test               # 109 unit tests
+Scripts/test.sh          # swift build + swift test: 113 unit tests
 Scripts/bundle-app.sh    # -> build/Quoin.app
 open build/Quoin.app
 ```

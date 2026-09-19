@@ -57,20 +57,36 @@ public enum SyntaxLanguage: String, CaseIterable, Sendable {
 /// Locates grammar query files. SwiftPM puts each grammar's queries in a
 /// resource bundle next to the built products; the app bundle script copies
 /// those bundles into Contents/Resources. Tests find them next to the
-/// .xctest bundle.
+/// .xctest bundle, or inside it.
 enum GrammarQueries {
     private final class BundleFinder {}
 
     static func highlightsURL(package: String, target: String) -> URL? {
         let bundleName = "\(package)_\(target).bundle"
+        let owner = Bundle(for: BundleFinder.self)
         var candidates: [URL] = []
         if let url = Bundle.main.resourceURL { candidates.append(url) }
         if let url = Bundle.main.executableURL?.deletingLastPathComponent() { candidates.append(url) }
         // In `swift test`, SyntaxKit is statically linked into the test
-        // bundle; the grammar bundles sit in the same build-products folder.
-        candidates.append(Bundle(for: BundleFinder.self).bundleURL.deletingLastPathComponent())
+        // bundle; the grammar bundles sit in the same build-products folder,
+        // and the Swift Build engine also copies them into the test bundle.
+        if let url = owner.resourceURL { candidates.append(url) }
+        candidates.append(owner.bundleURL.deletingLastPathComponent())
         for dir in candidates {
-            let url = dir.appendingPathComponent(bundleName).appendingPathComponent("queries/highlights.scm")
+            if let url = highlights(inBundleAt: dir.appendingPathComponent(bundleName)) { return url }
+        }
+        return nil
+    }
+
+    /// The query file inside one grammar bundle, whichever shape the build
+    /// gave it. SwiftPM's native build system wrote a flat folder (queries/
+    /// at the root); the Swift Build engine, the default from Swift 6.4,
+    /// writes a real macOS bundle (Contents/Resources/queries/). Looking for
+    /// only the flat shape cost every grammar its highlighting the day the
+    /// toolchain changed, so both are named here and pinned by a test.
+    static func highlights(inBundleAt bundleURL: URL) -> URL? {
+        for relative in ["queries/highlights.scm", "Contents/Resources/queries/highlights.scm"] {
+            let url = bundleURL.appendingPathComponent(relative)
             if FileManager.default.fileExists(atPath: url.path) { return url }
         }
         return nil

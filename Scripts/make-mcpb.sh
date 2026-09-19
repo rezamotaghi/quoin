@@ -13,10 +13,13 @@ VERSION=$(sed -n 's/^version: *//p' CITATION.cff | tr -d '"')
 [[ -n "$VERSION" ]] || { echo "no version in CITATION.cff"; exit 1; }
 
 swift build -c release --product QuoinMCP
+# The products folder differs by build system; ask, never assume (see
+# bundle-app.sh for the stale-symlink trap).
+BIN="$(swift build -c release --product QuoinMCP --show-bin-path)"
 
 rm -rf .mcpb
 mkdir -p .mcpb dist
-cp .build/release/QuoinMCP .mcpb/QuoinMCP
+cp "$BIN/QuoinMCP" .mcpb/QuoinMCP
 sed "s/__VERSION__/$VERSION/g" mcpb/manifest.json > .mcpb/manifest.json
 cp LICENSE .mcpb/LICENSE
 

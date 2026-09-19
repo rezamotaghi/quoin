@@ -9,6 +9,26 @@ is a major version bump.
 
 ## [Unreleased]
 
+### Fixed
+
+- Syntax highlighting survives the Swift Build engine (SwiftPM's default
+  from Swift 6.4). It writes each grammar's query bundle as a real macOS
+  bundle (`Contents/Resources/queries/`) where the native build system wrote
+  a flat folder; the lookup knew only the flat shape, so an app built with
+  the new tools would have highlighted nothing. Both shapes are found now
+  and pinned by tests.
+- `Scripts/bundle-app.sh` and `Scripts/make-mcpb.sh` ask SwiftPM where the
+  release products are (`--show-bin-path`) instead of reading `.build/release`,
+  a symlink the new engine cannot repoint and that could hand back a stale
+  binary. The install step replaces `/Applications/Quoin.app` instead of
+  merging into it, and verifies the code signature's seal afterwards.
+
+### Added
+
+- `Scripts/test.sh`, the build-and-test gate: `swift build && swift test`
+  with the Swift Testing macro plugin named, which the Swift 6.4 Command
+  Line Tools do not find on their own. 113 tests.
+
 ## [1.1.0] - 2026-09-09
 
 The agent-native release: the surface describes itself, pushes buffer

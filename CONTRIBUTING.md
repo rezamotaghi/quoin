@@ -9,10 +9,16 @@ parts of the surface are promises to other people's tooling.
 Pure SwiftPM, macOS 14+, Command Line Tools are enough (no Xcode.app needed):
 
 ```bash
-swift build              # compile everything
-swift test               # 109 unit tests, must be green
+Scripts/test.sh          # swift build + swift test: 113 unit tests, must be green
 Scripts/bundle-app.sh    # wrap the release binary into build/Quoin.app
 ```
+
+`Scripts/test.sh` is `swift build && swift test` with one addition: it names
+the Swift Testing macro plugin that sits beside the compiler, because the
+Swift 6.4 Command Line Tools do not find it on their own (every `@Test`
+fails with "plugin for module 'TestingMacros' not found"). With Xcode's
+toolchain the flag repeats a path the tools add anyway. Extra arguments go to
+`swift test`, e.g. `Scripts/test.sh --filter LineOperations`.
 
 `bundle-app.sh --install` additionally copies the fresh bundle to
 `/Applications/Quoin.app`. Once that copy exists, every later run
@@ -50,7 +56,7 @@ you are touching.
 ## What makes a good pull request
 
 - **Small.** One concern per PR. A fix and a refactor are two PRs.
-- **Tested.** `swift test` green, with new tests for new behavior. For
+- **Tested.** `Scripts/test.sh` green, with new tests for new behavior. For
   document plumbing (open, save, revert, quit-restore), exercise the running
   .app too; compiling is not proof.
 - **Documented.** If behavior changed, update QUICKSTART.md or

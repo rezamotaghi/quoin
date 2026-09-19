@@ -4,7 +4,7 @@
 
 ## Checklist
 
-- [ ] `swift test` passes locally (every test, plus any you added)
+- [ ] `Scripts/test.sh` passes locally (every test, plus any you added)
 - [ ] Docs updated if behavior changed (QUICKSTART.md / ARCHITECTURE.md)
 - [ ] No new dependencies, or an issue discussing the dependency was agreed first
 - [ ] If this touches the `quoin_*` MCP verbs: the change is additive, or the breaking change was agreed in an issue
