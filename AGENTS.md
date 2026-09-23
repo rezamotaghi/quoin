@@ -107,7 +107,7 @@ requires Xcode. Tests use **Swift Testing** (`import Testing`, `@Test`,
   all) and deprecated. `Scripts/test.sh` derives the plugin folder from the
   active toolchain and passes it to build and test alike; use it, not the
   bare commands. CI stays on the bare commands: Xcode's toolchain finds the
-  plugin, and the wrapper could not be proven there before a push.
+  plugin (green on the pushed aaa1679, 2026-09-20).
 - **A grammar bundle has two shapes.** The native build system wrote a flat
   folder (`queries/highlights.scm` at the root); the Swift Build engine,
   default from Swift 6.4, writes a real macOS bundle

@@ -194,6 +194,7 @@ the socket, the switch, and the edit count.
 | MCP shim | `Quoin.app/Contents/MacOS/QuoinMCP` |
 | MCP bundle for Claude Desktop | `Scripts/make-mcpb.sh` writes `dist/quoin-<version>.mcpb` |
 | Agent Skill | `skills/quoin-editing/SKILL.md` |
+| Build and test gate | `Scripts/test.sh` (`swift build` and `swift test`, testing plugin named) |
 | Live surface check | `Scripts/mcp-smoke.py --subscribe` (with the app running) |
 | CLI opener | `Scripts/quoin` (symlink it onto your PATH) |
 | Architecture and decisions | `ARCHITECTURE.md`, `AGENTS.md` in the repo |

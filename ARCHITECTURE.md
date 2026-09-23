@@ -40,24 +40,38 @@ Rental candidates, to be verified against their current state at Phase 1
 ## Module layout
 
 ```
-Package.swift            one package, five targets
+Package.swift            one package: seven targets, three test targets
 Sources/
-  EditorCore/            PURE data: Selection, SelectionSet, EditorViewPort.
+  EditorCore/            PURE data: Selection, SelectionSet, MultiCursor,
+                         EditorViewPort, EditorSettings, ColorScheme,
+                         LineOperations, TextTransforms, GlobPattern, the
+                         agent wire types (AgentProtocol) and AgentPolicy.
                          Never imports AppKit or SwiftUI. Multi-cursor is
                          [Selection] here, not view state.
-  SyntaxKit/             HighlightEngine protocol + (Phase 3) tree-sitter impl.
-                         Emits semantic style names; color schemes resolve them.
+  SyntaxKit/             HighlightEngine protocol + the tree-sitter engine
+                         (Phase 3). Emits semantic style names; color
+                         schemes resolve them.
+  TreeSitterPythonScanner/ the Python grammar's external scanner, vendored
+                         at the grammar's exact version.
   CommandKit/            Command = {id, title, keybinding, action} + registry.
                          Menus, keybindings, and the palette all read this.
   FuzzyKit/              The fuzzy scorer (pure function, tested).
-  QuoinApp/              The AppKit shell. Subfolders as they arrive:
-                         Shell/ (NSDocument, windows, tabs, panes),
-                         EditorView/ (the RENTED view behind EditorViewPort),
-                         Palette/, Settings/.
-Tests/                   EditorCoreTests, FuzzyKitTests (grow per phase)
-Scripts/bundle-app.sh    swift build -c release -> build/Quoin.app
-Settings/                default-settings.jsonc (+ schemes/ from Phase 3)
-Resources/Info.plist     bundle template (document types added in Phase 1)
+  QuoinApp/              The AppKit shell: Shell/ (NSDocument, windows, tabs,
+                         panes, menus, export), EditorView/ (the RENTED view
+                         behind EditorViewPort), Palette/, Preview/ (Markdown),
+                         Settings/ (settings and scheme stores), Agent/ (the
+                         unix-socket AgentServer, Amendment 1).
+  QuoinMCP/              The MCP stdio shim, shipped inside the .app
+                         (Amendment 1; self-describing since Amendment 2).
+Tests/                   EditorCoreTests, FuzzyKitTests, SyntaxKitTests
+Scripts/                 test.sh (build + test gate), bundle-app.sh (release
+                         build -> build/Quoin.app, refreshes an installed
+                         copy), mcp-smoke.py (live agent-surface gate),
+                         make-mcpb.sh (MCP Bundle), quoin (CLI opener)
+Settings/                default-settings.jsonc + schemes/ (mariana, breakers)
+Resources/               Info.plist (bundle template), AppIcon.icns
+skills/, mcpb/           the Agent Skill and the MCP Bundle manifest
+                         (Amendment 2)
 ```
 
 ## Invariants (enforced in review, violations are bugs)
@@ -82,7 +96,9 @@ is a registration plus nothing.
 ## Build phases
 
 Each phase is one clean coding session and ends runnable. Definition of done
-travels with the phase; do not start N+1 with N red.
+travels with the phase; do not start N+1 with N red. All six phases shipped
+in 1.0.0 (2026-07-18); the list stays as the record of the order and of what
+"done" meant for each.
 
 - **Phase 0 - Skeleton (DONE, this scaffold).** Package builds, tests green,
   `bundle-app.sh` produces a launchable window.
